@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> ABERTA: abrir número livre
+    ABERTA --> ABERTA: adicionar ou corrigir item
+    ABERTA --> FECHADA: confirmar cobrança externa
+    ABERTA --> CANCELADA: cancelar com confirmação
+    FECHADA --> [*]: número liberado
+    CANCELADA --> [*]: número liberado
+

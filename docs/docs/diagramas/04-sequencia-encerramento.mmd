@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor Caixa
+    participant UI as Interface
+    participant S as Serviço de comanda
+    participant DB as SQLite
+
+    Caixa->>UI: Solicitar total
+    UI->>S: Preparar encerramento
+    S->>DB: Carregar comanda e itens
+    DB-->>S: Itens e preços históricos
+    S-->>UI: Detalhamento e total
+    UI-->>Caixa: Exibir valor a digitar
+    Note over Caixa: Cobrança manual na maquininha externa
+    Caixa->>UI: Confirmar cobrança externa
+    UI->>S: Encerrar comanda
+    S->>DB: Criar venda e fechar comanda
+    DB-->>S: Commit
+    S-->>UI: Venda concluída
+

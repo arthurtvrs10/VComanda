@@ -1,0 +1,28 @@
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Java
+.gradle/
+build/
+out/
+target/
+*.class
+
+# Dados locais
+*.db
+*.db-shm
+*.db-wal
+backups/
+logs/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+

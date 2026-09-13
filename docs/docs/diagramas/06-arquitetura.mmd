@@ -1,0 +1,14 @@
+flowchart TB
+    UI[Interface JavaFX]
+    APP[Aplicação e casos de uso]
+    DOM[Domínio]
+    PERSIST[Persistência JDBC]
+    DB[(SQLite)]
+    FILES[Backups e logs]
+
+    UI --> APP
+    APP --> DOM
+    APP --> PERSIST
+    PERSIST --> DB
+    APP --> FILES
+

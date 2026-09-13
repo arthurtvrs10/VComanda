@@ -1,0 +1,13 @@
+flowchart TB
+    AT[Atendente]
+    CX[Caixa]
+    SYS[Sistema local de comandas]
+    BK[Backup local ou externo]
+    MQ[Maquininha externa]
+
+    AT -->|abre comanda e lança itens| SYS
+    CX -->|consulta total e encerra| SYS
+    SYS -->|cria cópia| BK
+    SYS -->|mostra total| CX
+    CX -->|digita o valor manualmente| MQ
+

@@ -1,0 +1,11 @@
+flowchart TD
+    A[Cliente inicia consumo] --> B[Atendente abre comanda]
+    B --> C[Atendente registra cada item]
+    C --> D[Caixa consulta a comanda]
+    D --> E[Sistema exibe itens e total]
+    E --> F[Caixa digita total na maquininha]
+    F --> G{Cobrança aprovada?}
+    G -- Não --> D
+    G -- Sim --> H[Caixa confirma encerramento]
+    H --> I[Sistema cria venda e libera número]
+

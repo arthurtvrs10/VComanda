@@ -1,0 +1,44 @@
+erDiagram
+    CATEGORIA ||--o{ PRODUTO : possui
+    PRODUTO ||--o{ ITEM_COMANDA : origina
+    COMANDA ||--o{ ITEM_COMANDA : contem
+    COMANDA ||--o| VENDA : gera
+
+    CATEGORIA {
+        integer id PK
+        text nome UK
+        boolean ativo
+    }
+    PRODUTO {
+        integer id PK
+        integer categoria_id FK
+        text nome
+        integer preco_centavos
+        boolean ativo
+    }
+    COMANDA {
+        integer id PK
+        integer numero
+        text status
+        datetime aberta_em
+        datetime fechada_em
+        integer total_centavos
+    }
+    ITEM_COMANDA {
+        integer id PK
+        integer comanda_id FK
+        integer produto_id FK
+        text nome_produto
+        integer preco_unitario_centavos
+        integer quantidade
+        integer subtotal_centavos
+    }
+    VENDA {
+        integer id PK
+        integer comanda_id FK,UK
+        integer numero UK
+        integer total_centavos
+        datetime finalizada_em
+        text status
+    }
+
