@@ -20,7 +20,9 @@
 - backup automático e manual;
 - validação e restauração de backup;
 - logs técnicos locais;
-- funcionamento offline em um computador.
+- funcionamento offline em um computador Windows;
+- prevenção de duas instâncias usando a mesma base;
+- recuperação de comandas abertas após fechamento inesperado.
 
 ## Fora do MVP
 
@@ -52,8 +54,9 @@ O MVP estará concluído quando, em um computador sem internet, um operador cons
 8. consultar a venda no histórico e no resumo diário;
 9. reiniciar o computador sem perder dados;
 10. criar, validar e restaurar um backup em ambiente de teste.
+11. reabrir o aplicativo após encerramento forçado e recuperar as comandas abertas;
+12. impedir que uma segunda instância use simultaneamente o mesmo banco.
 
 ## Regra de controle de escopo
 
 Uma nova funcionalidade somente entra no MVP se for necessária para registrar o consumo, calcular o total, preservar o histórico ou impedir perda crítica de dados. Toda mudança deve atualizar requisitos, testes e rastreabilidade.
-

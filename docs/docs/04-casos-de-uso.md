@@ -123,3 +123,16 @@ Falha preserva backups anteriores e não bloqueia o atendimento.
 
 Arquivo incompatível ou corrompido é recusado sem alterar a base ativa.
 
+## UC10 Recuperar atendimento interrompido
+
+**Ator:** atendente ou caixa.
+
+**Pré-condição:** o aplicativo foi encerrado com uma ou mais comandas abertas já persistidas.
+
+1. Iniciar novamente o aplicativo.
+2. Validar a estrutura e a integridade básica do banco.
+3. Localizar comandas com status `ABERTA`.
+4. Exibir os números como ocupados e restaurar itens e totais.
+5. Permitir a continuidade normal do atendimento.
+
+O aplicativo não cria venda, não fecha comanda e não repete a última alteração. Se a base falhar na validação, a aplicação bloqueia gravações e orienta a recuperação segura.

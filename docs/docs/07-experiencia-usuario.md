@@ -68,3 +68,13 @@ O sistema não deve mostrar botões Dinheiro, Pix, Débito ou Crédito.
 
 Os atalhos finais devem ser validados no equipamento e não podem conflitar com o sistema operacional.
 
+## Comportamento no Windows
+
+- abrir apenas uma instância do Varthex Comanda por sessão;
+- exibir aviso simples quando o usuário tentar abrir uma segunda instância;
+- preservar legibilidade com escala de exibição entre 100% e 200%;
+- não depender de permissões de administrador para a operação diária;
+- mostrar as comandas abertas normalmente após reinício inesperado;
+- manter foco e ordem de tabulação previsíveis em todas as ações essenciais.
+
+A resolução, escala e eventual uso de tela sensível ao toque devem ser confirmados no computador da lanchonete durante a homologação.

@@ -22,6 +22,9 @@
 | RN18 | Cancelar comanda com itens exige confirmação e não gera venda |
 | RN19 | Restaurar backup exige confirmação e cópia preventiva da base atual |
 | RN20 | Datas usam relógio local e são exibidas no padrão brasileiro |
+| RN21 | Uma segunda instância do aplicativo não pode acessar a mesma base enquanto a primeira estiver ativa |
+| RN22 | Reiniciar o aplicativo não fecha cancela nem altera uma comanda que estava aberta |
+| RN23 | Cada alteração confirmada de item deve ser persistida antes de a interface indicar sucesso |
 
 ## Invariantes de dados
 
@@ -32,8 +35,9 @@
 - uma venda não possui pagamento no MVP;
 - nenhuma comanda com status diferente de `ABERTA` recebe alterações de itens;
 - nenhum número aparece em duas comandas abertas simultaneamente.
+- encerramento inesperado não cria venda nem muda automaticamente o status da comanda;
+- uma venda só existe após a confirmação explícita e o commit do encerramento.
 
 ## Arredondamento
 
 O MVP trabalha apenas com preço unitário em centavos e quantidade inteira. Não existe arredondamento por item. Ticket médio usa divisão do total em centavos pela quantidade de vendas e deve ser apresentado com duas casas decimais.
-

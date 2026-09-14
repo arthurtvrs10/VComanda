@@ -22,6 +22,10 @@
 | CT16 | Atualizar aplicação | Migrações completam e totais anteriores permanecem |
 | CT17 | Navegar por teclado | É possível localizar, adicionar e iniciar encerramento |
 | CT18 | Resumo diário | Quatro vendas totalizando R$ 120,00 geram ticket médio R$ 30,00 |
+| CT19 | Impedir segunda instância | Com o aplicativo aberto, nova execução exibe aviso e não abre outra conexão com a base |
+| CT20 | Recuperar comandas abertas | Após término forçado, a reabertura mostra os mesmos itens e totais sem criar venda |
+| CT21 | Instalar no Windows | Pacote autocontido inicia em instalação limpa sem exigir SDK ou runtime separado |
+| CT22 | Controlar logs | Rotação remove arquivos além da retenção e respeita o limite de armazenamento configurado |
 
 ## Testes adicionais obrigatórios
 
@@ -50,6 +54,16 @@
 - checksum inválido;
 - base antiga que exige migração;
 - interrupção antes da substituição.
+
+### Windows e recuperação
+
+- instalação e desinstalação sem remover a pasta de dados;
+- escala de exibição de 100%, 150% e 200%;
+- segunda tentativa de abertura do executável;
+- término forçado após item confirmado e antes de novo lançamento;
+- reinício do computador com comanda aberta;
+- diretório de dados sem permissão e disco com pouco espaço;
+- rotação dos logs acima do período e do tamanho configurados.
 
 ## Pirâmide de testes
 
@@ -82,4 +96,3 @@ Uma tarefa está pronta quando:
 - possui mensagens compreensíveis;
 - passa na revisão de código;
 - atualiza documentação e rastreabilidade.
-

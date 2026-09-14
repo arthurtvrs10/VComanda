@@ -1,6 +1,6 @@
-# Sistema Local de Comandas para Lanchonete
+# Varthex Comanda
 
-Repositório documental para implementar um aplicativo desktop local e offline que registra produtos consumidos em comandas numeradas, calcula o total e apresenta o valor que o operador deverá digitar manualmente na maquininha.
+Repositório documental do **Varthex Comanda — Sistema Local de Controle de Consumo**, um aplicativo desktop para Windows que registra produtos consumidos em comandas numeradas, calcula o total e apresenta o valor que o operador deverá digitar manualmente na maquininha.
 
 O MVP não processa pagamentos, não se comunica com a maquininha e não registra forma de pagamento, valor recebido, troco, cartão ou autorização da adquirente.
 
@@ -38,6 +38,7 @@ Para desenvolvimento assistido por IA, o arquivo [AGENTS.md](AGENTS.md) define a
 | [16 Referências técnicas](docs/16-referencias-tecnicas.md) | Fontes sobre integrações futuras |
 | [17 Glossário](docs/17-glossario.md) | Termos funcionais e técnicos |
 | [18 Histórias de usuário](docs/18-historias-usuario.md) | Backlog funcional derivado dos requisitos |
+| [19 Plataforma Windows e .NET](docs/19-plataforma-windows-dotnet.md) | Estrutura da solução, comandos, persistência e publicação |
 
 ## Artefatos adicionais
 
@@ -65,17 +66,17 @@ itens registrados -> subtotais -> total a pagar
 
 O sistema registra a venda pelo total da comanda somente após confirmação explícita do operador. Ele não possui evidência automática de que o pagamento foi aprovado.
 
-## Stack recomendada
+## Stack definida
 
-- Java 21 LTS;
-- JavaFX;
+- C# e .NET 10 LTS;
+- WPF com XAML e MVVM;
 - SQLite;
-- JDBC com repositórios;
-- migrações versionadas;
-- JUnit;
-- `jpackage` para distribuição.
+- Entity Framework Core com repositórios;
+- migrações do Entity Framework Core;
+- xUnit;
+- publicação autocontida para Windows `win-x64` como padrão inicial.
 
-A stack é uma decisão proposta. Os requisitos de negócio não dependem de Java.
+A família do sistema operacional foi confirmada como Windows. A edição, versão, arquitetura e configuração do computador ainda devem ser registradas antes da homologação. Os requisitos de negócio permanecem independentes da tecnologia.
 
 ## Licença
 
@@ -83,4 +84,4 @@ Nenhuma licença de código foi escolhida. Antes de publicar o futuro código-fo
 
 ## Status
 
-Versão documental 1.2, de 13 de setembro de 2026. Escopo preparado para implementação do MVP em um único computador.
+Versão documental 1.3, de 13 de setembro de 2026. Escopo preparado para implementação do MVP em um único computador Windows.

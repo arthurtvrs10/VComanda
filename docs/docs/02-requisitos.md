@@ -30,6 +30,7 @@
 | RF24 | Alta | Restaurar backup | Validar, criar cópia preventiva, restaurar e reiniciar |
 | RF25 | Média | Configurar estabelecimento | Manter nome, números de comanda e pasta de backup |
 | RF26 | Média | Registrar falhas técnicas | Gravar log local sem dados sensíveis |
+| RF27 | Alta | Recuperar atendimento interrompido | Ao iniciar, carregar comandas abertas e seus itens sem duplicar ou descartar lançamentos confirmados |
 
 ## Requisitos não funcionais
 
@@ -51,8 +52,11 @@
 | RNF14 | Segurança local | Pasta de dados usa permissões do usuário do sistema operacional | Inspeção de permissões |
 | RNF15 | Manutenibilidade | Banco evolui por migrações versionadas e reversíveis por backup | Teste de atualização |
 | RNF16 | Observabilidade | Falhas geram mensagem compreensível e log técnico local | Teste de exceções |
-| RNF17 | Compatibilidade | Sistema operacional alvo é definido e testado antes da distribuição | Matriz de compatibilidade |
+| RNF17 | Compatibilidade | O aplicativo deve ser homologado no Windows e na versão e arquitetura registradas para o computador-alvo | Matriz de compatibilidade |
 | RNF18 | Acessibilidade | Operações essenciais funcionam por teclado e possuem foco visível | Teste de navegação |
+| RNF19 | Instância única | Somente uma instância pode usar a base local em uma sessão do Windows | Tentativa de segunda abertura |
+| RNF20 | Recuperação de sessão | Comandas abertas persistidas devem reaparecer após encerramento inesperado | Teste de término forçado |
+| RNF21 | Controle de logs | Logs devem ter rotação e limite configurado para não preencher o disco | Teste de retenção e tamanho |
 
 ## Dependências
 
@@ -61,4 +65,4 @@
 - RF18 e RF19 dependem de venda criada pelo RF17.
 - RF20 considera apenas vendas concluídas.
 - RF24 depende de backup validado pelo RF23.
-
+- RF27 depende da persistência transacional de RF07 a RF12.

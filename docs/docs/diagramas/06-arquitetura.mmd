@@ -1,8 +1,8 @@
 flowchart TB
-    UI[Interface JavaFX]
+    UI[Interface WPF e MVVM]
     APP[Aplicação e casos de uso]
     DOM[Domínio]
-    PERSIST[Persistência JDBC]
+    PERSIST[EF Core e SQLite]
     DB[(SQLite)]
     FILES[Backups e logs]
 
@@ -11,4 +11,3 @@ flowchart TB
     APP --> PERSIST
     PERSIST --> DB
     APP --> FILES
-

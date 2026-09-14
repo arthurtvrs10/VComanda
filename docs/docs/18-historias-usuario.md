@@ -88,3 +88,14 @@ Como suporte, quero restaurar uma cópia sem destruir a base atual em caso de ar
 
 **Aceite:** validação anterior, cópia preventiva e substituição atômica.
 
+### US14 Recuperar comandas abertas
+
+Como atendente, quero reencontrar as comandas abertas após uma interrupção para continuar o atendimento sem relançar produtos.
+
+**Aceite:** números, itens, preços e totais reaparecem sem venda automática ou duplicação.
+
+### US15 Impedir segunda instância
+
+Como responsável, quero que o sistema impeça duas instâncias usando a mesma base para reduzir risco de bloqueios e inconsistências.
+
+**Aceite:** a segunda execução mostra aviso, não abre conexão operacional e termina com segurança.

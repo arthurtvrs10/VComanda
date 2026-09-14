@@ -2,9 +2,9 @@
 
 ## Instalação
 
-1. confirmar o sistema operacional alvo;
-2. gerar instalador com runtime incluído;
-3. criar pasta de dados separada;
+1. registrar versão, arquitetura, memória, resolução e escala do Windows alvo;
+2. publicar o aplicativo .NET de forma autocontida para a arquitetura confirmada;
+3. criar `%LOCALAPPDATA%\VarthexComanda` com dados separados dos binários;
 4. aplicar migrações;
 5. criar configuração inicial;
 6. testar leitura e escrita;
@@ -12,6 +12,8 @@
 8. cadastrar catálogo;
 9. executar teste completo offline;
 10. registrar versão instalada.
+
+O usuário não precisa instalar o SDK do .NET. A primeira implantação pode usar a pasta autocontida publicada; um instalador deve ser adotado quando atualização e distribuição estiverem estabilizadas.
 
 ## Rotina diária
 
@@ -46,5 +48,6 @@ Coletar:
 - resultado do `PRAGMA integrity_check`;
 - espaço disponível em disco.
 
-Nunca solicitar foto de cartão, senha, token ou credencial da conta da maquininha.
+Também verificar se já existe outra instância do `VarthexComanda.exe`, se a pasta em `%LOCALAPPDATA%` está acessível e se o antivírus bloqueou o executável ou algum arquivo nativo do SQLite.
 
+Nunca solicitar foto de cartão, senha, token ou credencial da conta da maquininha.

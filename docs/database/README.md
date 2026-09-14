@@ -9,9 +9,9 @@
 ## Teste rápido
 
 ```bash
-sqlite3 lanchonete.db < schema.sql
-sqlite3 lanchonete.db < seed.sql
-sqlite3 lanchonete.db < verificacoes.sql
+sqlite3 varthex-comanda.db < schema.sql
+sqlite3 varthex-comanda.db < seed.sql
+sqlite3 varthex-comanda.db < verificacoes.sql
 ```
 
 O resultado de `PRAGMA integrity_check` deve ser `ok`. As consultas de divergência devem retornar zero linhas. O resumo diário do `seed.sql` deve apresentar uma venda de 5.400 centavos.
@@ -24,4 +24,3 @@ O resultado de `PRAGMA integrity_check` deve ser `ok`. As consultas de divergên
 - testar migração com banco vazio e com banco da versão anterior;
 - manter `PRAGMA foreign_keys = ON` em toda conexão;
 - não adicionar tabela de pagamento ao MVP.
-

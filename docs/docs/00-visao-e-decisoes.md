@@ -6,7 +6,7 @@ A lanchonete não registra formalmente o consumo durante o atendimento. No caixa
 
 ## Solução proposta
 
-Um aplicativo desktop executado em um único computador que permita:
+O **Varthex Comanda**, aplicativo desktop executado em um único computador Windows, permitirá:
 
 - cadastrar categorias e produtos;
 - abrir comandas numeradas;
@@ -37,6 +37,8 @@ Um aplicativo desktop executado em um único computador que permita:
 | DEC04 | A cobrança será digitada manualmente | O operador confirma o encerramento após resultado externo |
 | DEC05 | O funcionamento será offline | Nenhum fluxo essencial depende de API ou internet |
 | DEC06 | Preços históricos serão copiados para os itens | Alteração posterior do catálogo não muda vendas antigas |
+| DEC07 | A família do sistema operacional será Windows | Interface e distribuição podem usar tecnologias nativas da plataforma |
+| DEC08 | A stack será C# .NET 10 LTS WPF e SQLite | O projeto terá publicação autocontida e persistência local com Entity Framework Core |
 
 ## Premissas
 
@@ -47,8 +49,9 @@ Um aplicativo desktop executado em um único computador que permita:
 - valores são armazenados como inteiros em centavos;
 - atendente e caixa podem ser a mesma pessoa;
 - não existe autenticação de usuários no MVP.
+- o aplicativo terá uma única instância por sessão do Windows;
+- comandas abertas serão recuperadas após encerramento inesperado.
 
 ## Limitação operacional conhecida
 
 O sistema não recebe o resultado da maquininha. Se o operador encerrar a comanda antes da aprovação ou digitar um valor incorreto, o histórico pode divergir do valor efetivamente recebido. A interface deve destacar o total e exigir confirmação clara.
-

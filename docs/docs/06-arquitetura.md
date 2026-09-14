@@ -6,7 +6,7 @@ Aplicativo desktop modular, executado em um computador, com banco SQLite no mesm
 
 ```mermaid
 flowchart TB
-    UI[Interface JavaFX]
+    UI[Interface WPF e MVVM]
     APP[Casos de uso da aplicação]
     DOMAIN[Domínio e regras]
     DB[(SQLite)]
@@ -23,7 +23,7 @@ flowchart TB
 | Componente | Responsabilidade | Não deve fazer |
 | --- | --- | --- |
 | Interface | Navegação, entrada, mensagens e estado visual | Executar SQL ou conter regra crítica |
-| Aplicação | Orquestrar casos de uso e transações | Depender de controles JavaFX |
+| Aplicação | Orquestrar casos de uso e transações | Depender de controles WPF |
 | Domínio | Entidades, estados, cálculos e invariantes | Conhecer SQLite, arquivo ou tela |
 | Persistência | Consultas, mapeamento e migrações | Decidir regra de negócio |
 | Backup | Snapshot, validação, retenção e restauração | Modificar venda ou comanda |
@@ -55,16 +55,19 @@ app/
 
 Organização por domínio é preferida. Dentro de cada domínio, separe responsabilidades de negócio, aplicação, persistência e interface.
 
-## Stack proposta
+## Stack definida
 
-- Java 21 LTS;
-- JavaFX;
+- C# com .NET 10 LTS;
+- WPF e XAML;
+- MVVM com CommunityToolkit.Mvvm;
 - SQLite;
-- JDBC;
-- Flyway ou executor próprio de migrações;
-- JUnit;
-- TestFX somente nos fluxos críticos de interface;
-- `jpackage`.
+- Entity Framework Core com provedor SQLite;
+- migrações do Entity Framework Core;
+- xUnit;
+- Serilog para arquivos de log com rotação;
+- publicação autocontida para Windows.
+
+O executável de interface é também a raiz de composição. Domínio e aplicação não dependem de WPF, Entity Framework Core ou SQLite. A camada de infraestrutura implementa persistência, relógio, sistema de arquivos e backup.
 
 ## Transações
 
@@ -75,6 +78,8 @@ Devem ser transacionais:
 - encerramento com criação de venda e mudança de status;
 - cancelamento e liberação do número;
 - aplicação de migração.
+
+Cada caso de uso que grava dados utiliza uma unidade de trabalho e uma instância de contexto de curta duração. O aplicativo deve ativar chaves estrangeiras, definir tempo limite de bloqueio e impedir uma segunda instância usando a mesma base.
 
 ## Integração futura com maquininha
 
@@ -94,4 +99,4 @@ Essa interface não será implementada no MVP. O comportamento atual é um adapt
 - [ADR 0001 Aplicação desktop local](adr/0001-aplicacao-desktop-local.md)
 - [ADR 0002 SQLite](adr/0002-sqlite.md)
 - [ADR 0003 Pagamento fora do MVP](adr/0003-pagamento-fora-mvp.md)
-
+- [ADR 0004 Windows .NET e WPF](adr/0004-windows-dotnet-wpf.md)

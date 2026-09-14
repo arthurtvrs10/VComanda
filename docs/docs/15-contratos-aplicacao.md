@@ -53,6 +53,13 @@ VendaRepository
 BackupRegistroRepository
   salvar(registro)
   listarRecentes(limite)
+
+UnidadeTrabalho
+  executarEmTransacao(operacao)
+
+InstanciaAplicacao
+  tentarAdquirirBloqueio() -> booleano
+  liberarBloqueio()
 ```
 
 ## Casos de uso
@@ -68,6 +75,7 @@ EncerrarComanda.executar(comandaId, confirmacaoExterna) -> VendaDetalhe
 ConsultarHistorico.executar(periodo) -> lista de VendaResumo
 CriarBackup.executar(destino) -> ResultadoBackup
 RestaurarBackup.executar(arquivo, confirmacao) -> ResultadoRestauracao
+RecuperarAtendimento.executar() -> lista de ComandaResumo
 ```
 
 ## Resumo de cobrança manual
@@ -105,6 +113,16 @@ confirmar transação
 
 Qualquer exceção executa rollback.
 
+## Contratos técnicos no .NET
+
+- valores monetários usam `long` em centavos; `double` e `float` são proibidos;
+- datas persistidas usam texto ISO 8601 e são convertidas de forma explícita;
+- operações assíncronas recebem `CancellationToken` quando puderem aguardar arquivo ou banco;
+- `DbContext` não é compartilhado entre telas nem mantido durante toda a aplicação;
+- ViewModels dependem de casos de uso e nunca de `VarthexDbContext`;
+- o mutex de instância única é adquirido antes de abrir a conexão principal;
+- falhas técnicas são convertidas em resultado ou exceção de aplicação compreensível para a interface.
+
 ## Erros de domínio
 
 | Código | Situação |
@@ -118,6 +136,7 @@ Qualquer exceção executa rollback.
 | CONFIRMACAO_EXTERNA_AUSENTE | Encerramento sem confirmação humana |
 | VENDA_DUPLICADA | Já existe venda para a comanda |
 | BACKUP_INVALIDO | Arquivo incompatível ou corrompido |
+| APLICACAO_JA_ABERTA | Outra instância já está utilizando a base local |
+| BANCO_INDISPONIVEL | Base ausente, bloqueada, sem permissão ou com falha de integridade |
 
 Mensagens de interface devem traduzir esses códigos para linguagem simples.
-

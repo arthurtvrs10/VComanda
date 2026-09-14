@@ -1,5 +1,17 @@
 # Histórico de alterações
 
+## 1.3 - 2026-09-13
+
+- adotado o nome oficial Varthex Comanda;
+- confirmada a família do sistema operacional Windows;
+- substituída a proposta Java por C# .NET 10 LTS WPF e SQLite;
+- definido Entity Framework Core para persistência e migrações;
+- incluída publicação autocontida para Windows;
+- adicionadas regras de instância única e recuperação de comandas abertas;
+- adicionados controle de rotação de logs e testes específicos de Windows;
+- incluídos guia técnico da plataforma e ADR da stack;
+- mantido pagamento completamente fora do MVP.
+
 ## 1.2 - 2026-09-13
 
 - retirado o processamento de pagamentos do MVP;
@@ -18,4 +30,3 @@
 ## 1.0 - 2026-09-13
 
 - definição inicial do sistema local de comandas.
-

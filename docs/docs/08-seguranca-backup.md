@@ -18,13 +18,31 @@ O MVP não cadastra cliente. Não solicitar nome, CPF, telefone, endereço ou da
 ## Local dos arquivos
 
 ```text
-dados/
-  lanchonete.db
+%LOCALAPPDATA%\VarthexComanda\
+  data\
+    varthex-comanda.db
   logs/
   backups/
 ```
 
-Em produção, use a pasta de dados do usuário do sistema operacional. Não grave o banco ao lado do executável.
+Em produção, derive a pasta com `Environment.SpecialFolder.LocalApplicationData`. Não grave o banco ao lado do executável e não exija permissão de administrador para escrever dados operacionais.
+
+## Instância única e recuperação
+
+- usar um mutex nomeado para impedir duas instâncias na mesma sessão do Windows;
+- manter a restrição única do banco como segunda linha de defesa;
+- confirmar cada gravação antes de apresentar sucesso na interface;
+- ao iniciar, validar migrações e carregar comandas `ABERTA` sem alterar seu estado;
+- se a integridade falhar, bloquear novas gravações e orientar a restauração;
+- não tentar restaurar automaticamente um backup sem confirmação humana.
+
+## Logs
+
+- gravar arquivos locais estruturados por data;
+- aplicar rotação diária e limite total configurado;
+- conservar 30 dias por padrão;
+- mascarar caminhos ou conteúdos que revelem dados desnecessários;
+- nunca registrar itens como dados de cartão, senha, token ou autorização.
 
 ## Política de backup
 
@@ -60,4 +78,3 @@ Em produção, use a pasta de dados do usuário do sistema operacional. Não gra
 8. reiniciar e verificar consultas essenciais.
 
 Falha em qualquer etapa preserva a base ativa.
-

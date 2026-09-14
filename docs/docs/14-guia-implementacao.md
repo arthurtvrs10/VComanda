@@ -6,10 +6,11 @@ Este é o documento operacional para construir o MVP somente com base no reposit
 
 ### Tarefas
 
-- responder QV01, QV02 e QV07;
-- confirmar Java 21 e JavaFX;
-- confirmar diretório de dados por sistema operacional;
-- definir Gradle ou Maven;
+- responder QV01, QV02 e completar QV07;
+- instalar o SDK do .NET 10 no computador de desenvolvimento;
+- confirmar C# WPF MVVM Entity Framework Core e SQLite;
+- definir `%LOCALAPPDATA%\VarthexComanda` como raiz de dados;
+- confirmar a arquitetura de publicação `win-x64` ou substituí-la pela arquitetura homologada;
 - configurar testes e integração contínua.
 
 ### Saída
@@ -21,11 +22,13 @@ Aplicativo vazio inicia pelo comando de desenvolvimento e pelo pacote instalado.
 ### Tarefas
 
 - criar módulos definidos em [Arquitetura](06-arquitetura.md);
+- criar a solução e os projetos conforme [Plataforma Windows e .NET](19-plataforma-windows-dotnet.md);
 - configurar SQLite com `foreign_keys = ON`;
-- criar controle de versão de migrações;
+- configurar Entity Framework Core e migrações versionadas;
 - aplicar [schema.sql](../database/schema.sql);
 - criar abstração de relógio e transação;
 - implementar logs locais;
+- implementar mutex de instância única;
 - testar inicialização e migração repetida.
 
 ### Critérios
@@ -34,6 +37,8 @@ Aplicativo vazio inicia pelo comando de desenvolvimento e pelo pacote instalado.
 - iniciar duas vezes não duplica estrutura;
 - falha de migração preserva base anterior;
 - aplicação funciona sem rede.
+- segunda execução informa que o aplicativo já está aberto e termina com segurança;
+- banco, logs e backups ficam fora da pasta publicada.
 
 ## Etapa 2 Catálogo
 
@@ -132,11 +137,11 @@ Não considerar concluído até restaurar uma cópia em pasta de teste.
 
 ## Etapa 7 Configuração e acabamento
 
-Implementar RF25 e RF26, navegação por teclado, mensagens, empacotamento e instalação limpa.
+Implementar RF25 a RF27, recuperação de comandas abertas, rotação de logs, navegação por teclado, mensagens, publicação autocontida e instalação limpa.
 
 ## Etapa 8 Homologação
 
-1. executar CT01 a CT18;
+1. executar CT01 a CT22;
 2. executar massa mínima;
 3. testar sem internet;
 4. testar no computador real;
@@ -144,6 +149,10 @@ Implementar RF25 e RF26, navegação por teclado, mensagens, empacotamento e ins
 6. restaurar backup;
 7. treinar os operadores;
 8. registrar pendências restantes.
+
+## Comandos da plataforma
+
+Os comandos de criação da solução, referências, pacotes, migrações, testes e publicação estão centralizados em [Plataforma Windows e .NET](19-plataforma-windows-dotnet.md). Não duplicar versões ou opções de publicação em scripts diferentes sem atualizar esse documento.
 
 ## Ordem sugerida de branches
 
@@ -159,4 +168,3 @@ feature/backup-restauracao
 chore/empacotamento
 test/homologacao-mvp
 ```
-
