@@ -1163,18 +1163,34 @@ public class SingleInstanceGuardTests
     [Fact]
     public void TryAcquire_SegundaGuardaComMesmoNome_FalhaAteAPrimeiraLiberar()
     {
+        // Um mutex nomeado do Windows é reentrante para a MESMA THREAD: se a
+        // "segunda" guarda tentasse adquirir na mesma thread da "primeira", o
+        // WaitOne teria sucesso mesmo com a primeira ainda segurando o mutex
+        // (recursão por thread, não exclusão por processo). Por isso a tentativa
+        // da "segunda" roda em outra thread via Task.Run — só assim o SO aplica
+        // a exclusão real que SingleInstanceGuard depende para funcionar entre
+        // processos distintos.
         var nomeMutex = "VarthexComandaTests_" + Guid.NewGuid();
         using var primeira = new SingleInstanceGuard(nomeMutex);
-        using var segunda = new SingleInstanceGuard(nomeMutex);
-
         Assert.True(primeira.TryAcquire());
-        Assert.False(segunda.TryAcquire());
+
+        var segundaConseguiu = Task.Run(() =>
+        {
+            using var segunda = new SingleInstanceGuard(nomeMutex);
+            return segunda.TryAcquire();
+        }).Result;
+        Assert.False(segundaConseguiu);
 
         primeira.Release();
 
-        using var terceira = new SingleInstanceGuard(nomeMutex);
-        Assert.True(terceira.TryAcquire());
-        terceira.Release();
+        var terceiraConseguiu = Task.Run(() =>
+        {
+            using var terceira = new SingleInstanceGuard(nomeMutex);
+            var conseguiu = terceira.TryAcquire();
+            if (conseguiu) terceira.Release();
+            return conseguiu;
+        }).Result;
+        Assert.True(terceiraConseguiu);
     }
 }
 ```
