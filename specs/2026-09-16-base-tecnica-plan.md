@@ -1114,8 +1114,10 @@ public class BackupRegistroConfiguration : IEntityTypeConfiguration<BackupRegist
 
 ```powershell
 dotnet tool install --global dotnet-ef
-dotnet ef migrations add InitialCreate --project backend/src/VarthexComanda.Infrastructure --startup-project backend/src/VarthexComanda.Desktop
+dotnet ef migrations add InitialCreate --project backend/src/VarthexComanda.Infrastructure --startup-project backend/src/VarthexComanda.Infrastructure --output-dir Persistence/Migrations
 ```
+
+Use `VarthexComanda.Infrastructure` as both `--project` and `--startup-project` — not `VarthexComanda.Desktop`. Until Task 8 fixes `App.xaml.cs`'s base-class collision (see Task 8's note), the Desktop project does not build, and `dotnet ef` needs its startup project to build. `--output-dir Persistence/Migrations` is required too — without it, `dotnet ef` generates migrations under a top-level `Migrations/` folder instead of `Persistence/Migrations/`.
 
 Expected: a `Persistence/Migrations/<timestamp>_InitialCreate.cs` (+ `.Designer.cs` + `VarthexComandaDbContextModelSnapshot.cs`) is generated, creating the 7 tables, their indexes and their check constraints.
 
@@ -1363,6 +1365,8 @@ dotnet add backend/src/VarthexComanda.Desktop package Microsoft.Extensions.Depen
 
 - [ ] **Step 2: Implement the startup sequence in `App.xaml.cs`**
 
+Note: the base class below is fully qualified as `System.Windows.Application`, not bare `Application`. Since Task 4 declared `namespace VarthexComanda.Application.Abstractions`, the `VarthexComanda.Application` segment is now a real namespace, and `VarthexComanda.Desktop` is its sibling under the shared `VarthexComanda` root — so an unqualified `Application` in this file resolves ambiguously (CS0118: "Application" is a namespace but is used as a type) even though the stock WPF template's default `App.xaml.cs` uses the bare name. Always write the fully-qualified base class here.
+
 `backend/src/VarthexComanda.Desktop/App.xaml.cs`:
 
 ```csharp
@@ -1379,7 +1383,7 @@ using VarthexComanda.Infrastructure.Time;
 
 namespace VarthexComanda.Desktop;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     private SingleInstanceGuard? _guard;
     private ILogger? _logger;
