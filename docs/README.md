@@ -46,7 +46,6 @@ Para desenvolvimento assistido por IA, o arquivo [AGENTS.md](AGENTS.md) define a
 - `docs/diagramas/`: fontes Mermaid editáveis para GitHub.
 - `docs/adr/`: decisões arquiteturais registradas.
 - `documentos/`: documento consolidado em Word no padrão ABNT.
-- `.github/`: modelos para issues e pull requests.
 - `templates/`: modelos para caso de teste e solicitação de mudança.
 
 ## Regra central do MVP

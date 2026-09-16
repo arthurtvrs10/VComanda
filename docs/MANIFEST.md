@@ -26,7 +26,7 @@
 - contratos de aplicação;
 - guia executável da plataforma Windows e .NET;
 - roadmap, riscos e pendências;
-- modelos de issue, pull request, teste e mudança;
+- modelos de teste e de solicitação de mudança;
 - instruções para agentes de desenvolvimento.
 
 ## Validações realizadas
