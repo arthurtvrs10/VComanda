@@ -25,7 +25,7 @@
 ### Task 1: Solution & project scaffold
 
 **Files:**
-- Create: `backend/VarthexComanda.sln`
+- Create: `backend/VarthexComanda.slnx` (this SDK's `dotnet new sln` defaults to the .slnx format; do not force legacy .sln)
 - Create: `backend/src/VarthexComanda.Domain/VarthexComanda.Domain.csproj`
 - Create: `backend/src/VarthexComanda.Application/VarthexComanda.Application.csproj`
 - Create: `backend/src/VarthexComanda.Infrastructure/VarthexComanda.Infrastructure.csproj`
@@ -55,7 +55,7 @@ dotnet new xunit -n VarthexComanda.Infrastructure.Tests -o tests/VarthexComanda.
 dotnet sln add (Get-ChildItem -Recurse -Filter *.csproj)
 ```
 
-Delete the placeholder `Class1.cs` that `classlib` templates generate in Domain, Application and Infrastructure (Task 2+ replace them).
+Delete the placeholder `Class1.cs` that `classlib` templates generate in Domain, Application and Infrastructure (Task 2+ replace them). Also delete the placeholder `UnitTest1.cs` that `dotnet new xunit` generates in each of the 3 test projects — they assert nothing and would throw off Task 9's exact per-project test counts.
 
 - [ ] **Step 2: Wire project references**
 
@@ -1480,7 +1480,7 @@ Title="Varthex Comanda" Height="450" Width="800"
 - [ ] **Step 4: Build in Release and verify manually**
 
 ```powershell
-dotnet build backend/VarthexComanda.sln --configuration Release
+dotnet build backend/VarthexComanda.slnx --configuration Release
 dotnet run --project backend/src/VarthexComanda.Desktop --configuration Release
 ```
 
@@ -1506,8 +1506,8 @@ git commit -m "feat: liga composição raiz do Desktop (instância única, migra
 - [ ] **Step 1: Full build and test pass in Release**
 
 ```powershell
-dotnet build backend/VarthexComanda.sln --configuration Release
-dotnet test backend/VarthexComanda.sln --configuration Release
+dotnet build backend/VarthexComanda.slnx --configuration Release
+dotnet test backend/VarthexComanda.slnx --configuration Release
 ```
 
 Expected: build succeeds; all tests from Tasks 2-7 pass (Domain.Tests: 4, Infrastructure.Tests: 3 + 1 + 3 + 1 + 1 = 9, Application.Tests: 0 — still empty in this slice).
