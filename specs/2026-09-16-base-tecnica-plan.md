@@ -949,6 +949,7 @@ public class ComandaConfiguration : IEntityTypeConfiguration<Comanda>
         builder.ToTable("comanda", t =>
         {
             t.HasCheckConstraint("CK_comanda_numero_positivo", "numero > 0");
+            t.HasCheckConstraint("CK_comanda_status_valido", "status IN ('ABERTA', 'FECHADA', 'CANCELADA')");
             t.HasCheckConstraint("CK_comanda_total_centavos_nao_negativo", "total_centavos >= 0");
             t.HasCheckConstraint(
                 "CK_comanda_status_fechada_em",
