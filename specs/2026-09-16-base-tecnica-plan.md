@@ -836,11 +836,6 @@ public class VarthexComandaDbContext : DbContext
     public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
     public DbSet<BackupRegistro> BackupRegistros => Set<BackupRegistro>();
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlite(o => { });
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(VarthexComandaDbContext).Assembly);
@@ -848,14 +843,7 @@ public class VarthexComandaDbContext : DbContext
 }
 ```
 
-Note: `UseSqlite(o => {})` here only configures provider-specific options; the connection string itself is set by whoever builds `DbContextOptions` (tests and the design-time factory both pass their own `Data Source=...` into `UseSqlite(connectionString)` — remove the parameterless override above and rely solely on the caller-supplied options). Simplify `OnConfiguring` to a no-op:
-
-```csharp
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        // A connection string já vem configurada em DbContextOptions pelo chamador.
-    }
-```
+There is no `OnConfiguring` override: the connection string and provider are always supplied by the caller through `DbContextOptions` (tests, the design-time factory in Step 5, and Task 8's composition root all build their own `new DbContextOptionsBuilder<VarthexComandaDbContext>().UseSqlite(...)`).
 
 Every SQLite connection must run with foreign keys on; add this immediately after `UseSqlite` wherever the connection is opened — in the design-time factory (Step 5) and in Task 8's composition root — via `connection.Open(); using var pragma = connection.CreateCommand(); pragma.CommandText = "PRAGMA foreign_keys = ON;"; pragma.ExecuteNonQuery();` before constructing `DbContextOptions` from an already-open `SqliteConnection`.
 
@@ -896,7 +884,7 @@ public class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
 {
     public void Configure(EntityTypeBuilder<Categoria> builder)
     {
-        builder.ToTable("categoria");
+        builder.ToTable("categoria", t => t.HasCheckConstraint("CK_categoria_ativo", "ativo IN (0, 1)"));
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id");
         builder.Property(c => c.Nome).HasColumnName("nome").UseCollation("NOCASE").IsRequired();
@@ -921,7 +909,11 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
 {
     public void Configure(EntityTypeBuilder<Produto> builder)
     {
-        builder.ToTable("produto", t => t.HasCheckConstraint("CK_produto_preco_centavos_positivo", "preco_centavos > 0"));
+        builder.ToTable("produto", t =>
+        {
+            t.HasCheckConstraint("CK_produto_preco_centavos_positivo", "preco_centavos > 0");
+            t.HasCheckConstraint("CK_produto_ativo", "ativo IN (0, 1)");
+        });
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("id");
         builder.Property(p => p.CategoriaId).HasColumnName("categoria_id").IsRequired();
@@ -1038,7 +1030,11 @@ public class VendaConfiguration : IEntityTypeConfiguration<Venda>
 {
     public void Configure(EntityTypeBuilder<Venda> builder)
     {
-        builder.ToTable("venda", t => t.HasCheckConstraint("CK_venda_total_centavos_positivo", "total_centavos > 0"));
+        builder.ToTable("venda", t =>
+        {
+            t.HasCheckConstraint("CK_venda_total_centavos_positivo", "total_centavos > 0");
+            t.HasCheckConstraint("CK_venda_status_concluida", "status = 'CONCLUIDA'");
+        });
         builder.HasKey(v => v.Id);
         builder.Property(v => v.Id).HasColumnName("id");
         builder.Property(v => v.ComandaId).HasColumnName("comanda_id").IsRequired();
@@ -1096,7 +1092,7 @@ public class BackupRegistroConfiguration : IEntityTypeConfiguration<BackupRegist
 {
     public void Configure(EntityTypeBuilder<BackupRegistro> builder)
     {
-        builder.ToTable("backup_registro");
+        builder.ToTable("backup_registro", t => t.HasCheckConstraint("CK_backup_registro_status", "status IN ('SUCESSO', 'FALHA')"));
         builder.HasKey(b => b.Id);
         builder.Property(b => b.Id).HasColumnName("id");
         builder.Property(b => b.Arquivo).HasColumnName("arquivo").IsRequired();
@@ -1374,10 +1370,12 @@ using System.Windows;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Infrastructure.Concurrency;
 using VarthexComanda.Infrastructure.Logging;
 using VarthexComanda.Infrastructure.Persistence;
 using VarthexComanda.Infrastructure.Storage;
+using VarthexComanda.Infrastructure.Time;
 
 namespace VarthexComanda.Desktop;
 
@@ -1408,9 +1406,11 @@ public partial class App : Application
         _logger = LoggingConfigurator.CreateLogger(paths.LogsDirectory);
         _logger.Information("Iniciando Varthex Comanda");
 
+        IClock clock = new SystemClock();
+
         try
         {
-            DatabaseBackupService.BackupIfExists(paths.DatabasePath, paths.BackupsDirectory, DateTime.UtcNow);
+            DatabaseBackupService.BackupIfExists(paths.DatabasePath, paths.BackupsDirectory, clock.UtcNow);
 
             var connection = new SqliteConnection($"Data Source={paths.DatabasePath}");
             connection.Open();
