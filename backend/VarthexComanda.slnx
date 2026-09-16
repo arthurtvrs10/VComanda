@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VarthexComanda.Application/VarthexComanda.Application.csproj" />
+    <Project Path="src/VarthexComanda.Desktop/VarthexComanda.Desktop.csproj" />
+    <Project Path="src/VarthexComanda.Domain/VarthexComanda.Domain.csproj" />
+    <Project Path="src/VarthexComanda.Infrastructure/VarthexComanda.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VarthexComanda.Application.Tests/VarthexComanda.Application.Tests.csproj" />
+    <Project Path="tests/VarthexComanda.Domain.Tests/VarthexComanda.Domain.Tests.csproj" />
+    <Project Path="tests/VarthexComanda.Infrastructure.Tests/VarthexComanda.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

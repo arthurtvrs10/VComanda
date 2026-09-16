@@ -1,0 +1,16 @@
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\bin\Debug\net10.0\VarthexComanda.Application.deps.json
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\bin\Debug\net10.0\VarthexComanda.Application.dll
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\bin\Debug\net10.0\VarthexComanda.Application.pdb
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\bin\Debug\net10.0\VarthexComanda.Domain.dll
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\bin\Debug\net10.0\VarthexComanda.Domain.pdb
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.csproj.AssemblyReference.cache
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.AssemblyInfoInputs.cache
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.AssemblyInfo.cs
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.csproj.CoreCompileInputs.cache
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.sourcelink.json
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexC.9B5E2EB4.Up2Date
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.dll
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\refint\VarthexComanda.Application.dll
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\VarthexComanda.Application.pdb
+C:\Users\arthu\Desktop\VComanda\.claude\worktrees\base-tecnica-etapa-0-1\backend\src\VarthexComanda.Application\obj\Debug\net10.0\ref\VarthexComanda.Application.dll

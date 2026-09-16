@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "VarthexComanda.Application/1.0.0": {
+        "dependencies": {
+          "VarthexComanda.Domain": "1.0.0"
+        },
+        "runtime": {
+          "VarthexComanda.Application.dll": {}
+        }
+      },
+      "VarthexComanda.Domain/1.0.0": {
+        "runtime": {
+          "VarthexComanda.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VarthexComanda.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VarthexComanda.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
