@@ -15,6 +15,7 @@ public class ComandaConfiguration : IEntityTypeConfiguration<Comanda>
             t.HasCheckConstraint(
                 "CK_comanda_status_fechada_em",
                 "(status = 'ABERTA' AND fechada_em IS NULL) OR (status IN ('FECHADA', 'CANCELADA') AND fechada_em IS NOT NULL)");
+            t.HasCheckConstraint("CK_comanda_status_valido", "status IN ('ABERTA', 'FECHADA', 'CANCELADA')");
         });
 
         builder.HasKey(c => c.Id);

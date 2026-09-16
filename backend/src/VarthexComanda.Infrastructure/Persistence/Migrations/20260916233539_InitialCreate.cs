@@ -65,6 +65,7 @@ namespace VarthexComanda.Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_comanda", x => x.id);
                     table.CheckConstraint("CK_comanda_numero_positivo", "numero > 0");
                     table.CheckConstraint("CK_comanda_status_fechada_em", "(status = 'ABERTA' AND fechada_em IS NULL) OR (status IN ('FECHADA', 'CANCELADA') AND fechada_em IS NOT NULL)");
+                    table.CheckConstraint("CK_comanda_status_valido", "status IN ('ABERTA', 'FECHADA', 'CANCELADA')");
                     table.CheckConstraint("CK_comanda_total_centavos_nao_negativo", "total_centavos >= 0");
                 });
 

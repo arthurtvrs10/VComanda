@@ -11,7 +11,7 @@ using VarthexComanda.Infrastructure.Persistence;
 namespace VarthexComanda.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(VarthexComandaDbContext))]
-    [Migration("20260916232400_InitialCreate")]
+    [Migration("20260916233539_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -144,6 +144,8 @@ namespace VarthexComanda.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_comanda_numero_positivo", "numero > 0");
 
                             t.HasCheckConstraint("CK_comanda_status_fechada_em", "(status = 'ABERTA' AND fechada_em IS NULL) OR (status IN ('FECHADA', 'CANCELADA') AND fechada_em IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_comanda_status_valido", "status IN ('ABERTA', 'FECHADA', 'CANCELADA')");
 
                             t.HasCheckConstraint("CK_comanda_total_centavos_nao_negativo", "total_centavos >= 0");
                         });
