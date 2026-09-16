@@ -10,15 +10,24 @@ public class SingleInstanceGuardTests
     {
         var nomeMutex = "VarthexComandaTests_" + Guid.NewGuid();
         using var primeira = new SingleInstanceGuard(nomeMutex);
-        using var segunda = new SingleInstanceGuard(nomeMutex);
-
         Assert.True(primeira.TryAcquire());
-        Assert.False(segunda.TryAcquire());
+
+        var segundaConseguiu = Task.Run(() =>
+        {
+            using var segunda = new SingleInstanceGuard(nomeMutex);
+            return segunda.TryAcquire();
+        }).Result;
+        Assert.False(segundaConseguiu);
 
         primeira.Release();
 
-        using var terceira = new SingleInstanceGuard(nomeMutex);
-        Assert.True(terceira.TryAcquire());
-        terceira.Release();
+        var terceiraConseguiu = Task.Run(() =>
+        {
+            using var terceira = new SingleInstanceGuard(nomeMutex);
+            var conseguiu = terceira.TryAcquire();
+            if (conseguiu) terceira.Release();
+            return conseguiu;
+        }).Result;
+        Assert.True(terceiraConseguiu);
     }
 }
