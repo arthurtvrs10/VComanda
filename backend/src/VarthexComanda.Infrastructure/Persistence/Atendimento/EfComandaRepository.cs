@@ -4,7 +4,7 @@ using VarthexComanda.Domain;
 
 namespace VarthexComanda.Infrastructure.Persistence.Atendimento;
 
-public class EfComandaRepository
+public class EfComandaRepository : IComandaRepository
 {
     private readonly IDbContextFactory<VarthexComandaDbContext> _fabricaContexto;
 
@@ -59,6 +59,111 @@ public class EfComandaRepository
         {
             throw new NumeroComandaOcupadoException();
         }
+        return comanda;
+    }
+
+    public ComandaComItens AdicionarItem(int comandaId, Produto produto, int quantidade, DateTime agora)
+    {
+        using var contexto = _fabricaContexto.CreateDbContext();
+        var comanda = contexto.Comandas.SingleOrDefault(c => c.Id == comandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comandaId).ToList();
+        var itemExistente = itens.FirstOrDefault(i => i.ProdutoId == produto.Id && i.PrecoUnitarioCentavos == produto.PrecoCentavos);
+
+        if (itemExistente is not null)
+        {
+            itemExistente.Quantidade += quantidade;
+            itemExistente.SubtotalCentavos = itemExistente.PrecoUnitarioCentavos * itemExistente.Quantidade;
+            itemExistente.AtualizadoEm = agora;
+        }
+        else
+        {
+            var novoItem = new ItemComanda
+            {
+                Id = 0,
+                ComandaId = comandaId,
+                ProdutoId = produto.Id,
+                NomeProduto = produto.Nome,
+                PrecoUnitarioCentavos = produto.PrecoCentavos,
+                Quantidade = quantidade,
+                SubtotalCentavos = produto.PrecoCentavos * quantidade,
+                CriadoEm = agora,
+                AtualizadoEm = agora
+            };
+            contexto.ItensComanda.Add(novoItem);
+            itens.Add(novoItem);
+        }
+
+        comanda.TotalCentavos = itens.Sum(i => i.SubtotalCentavos);
+        contexto.SaveChanges();
+
+        return new ComandaComItens { Comanda = comanda, Itens = itens };
+    }
+
+    public ComandaComItens AlterarQuantidade(int itemId, int quantidade, DateTime agora)
+    {
+        using var contexto = _fabricaContexto.CreateDbContext();
+        var item = contexto.ItensComanda.SingleOrDefault(i => i.Id == itemId)
+            ?? throw new InvalidOperationException("Item não encontrado.");
+        var comanda = contexto.Comandas.SingleOrDefault(c => c.Id == item.ComandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        item.Quantidade = quantidade;
+        item.SubtotalCentavos = item.PrecoUnitarioCentavos * quantidade;
+        item.AtualizadoEm = agora;
+
+        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comanda.Id).ToList();
+        comanda.TotalCentavos = itens.Sum(i => i.SubtotalCentavos);
+        contexto.SaveChanges();
+
+        return new ComandaComItens { Comanda = comanda, Itens = itens };
+    }
+
+    public ComandaComItens RemoverItem(int itemId, DateTime agora)
+    {
+        using var contexto = _fabricaContexto.CreateDbContext();
+        var item = contexto.ItensComanda.SingleOrDefault(i => i.Id == itemId)
+            ?? throw new InvalidOperationException("Item não encontrado.");
+        var comanda = contexto.Comandas.SingleOrDefault(c => c.Id == item.ComandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        contexto.ItensComanda.Remove(item);
+
+        var itensRestantes = contexto.ItensComanda
+            .Where(i => i.ComandaId == comanda.Id && i.Id != itemId)
+            .ToList();
+        comanda.TotalCentavos = itensRestantes.Sum(i => i.SubtotalCentavos);
+        contexto.SaveChanges();
+
+        return new ComandaComItens { Comanda = comanda, Itens = itensRestantes };
+    }
+
+    public Comanda CancelarComanda(int comandaId, DateTime agora)
+    {
+        using var contexto = _fabricaContexto.CreateDbContext();
+        var comanda = contexto.Comandas.SingleOrDefault(c => c.Id == comandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        comanda.Status = StatusComanda.Cancelada;
+        comanda.FechadaEm = agora;
+        contexto.SaveChanges();
         return comanda;
     }
 }

@@ -1,9 +1,11 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using VarthexComanda.Application.Catalogo;
 using VarthexComanda.Domain;
 using VarthexComanda.Infrastructure.Persistence;
 using VarthexComanda.Infrastructure.Persistence.Atendimento;
+using VarthexComanda.Infrastructure.Persistence.Catalogo;
 using Xunit;
 
 namespace VarthexComanda.Infrastructure.Tests.Atendimento;
@@ -89,5 +91,112 @@ public class EfComandaRepositoryTests : IDisposable
         var detalhe = repositorio.BuscarComItens(999);
 
         Assert.Null(detalhe);
+    }
+
+    private (Produto produto, int comandaId) PrepararComandaEProduto(EfComandaRepository comandas)
+    {
+        var categoriaRepositorio = new EfCategoriaRepository(_fabrica);
+        var agora = DateTime.UtcNow;
+        var categoria = categoriaRepositorio.Salvar(new Categoria { Id = 0, Nome = "Bebidas", Ativo = true, CriadoEm = agora, AtualizadoEm = agora });
+        var produtoRepositorio = new EfProdutoRepository(_fabrica);
+        var produto = produtoRepositorio.Salvar(new Produto { Id = 0, CategoriaId = categoria.Id, Nome = "Refrigerante", PrecoCentavos = 500, Ativo = true, CriadoEm = agora, AtualizadoEm = agora });
+        var comanda = comandas.AbrirComanda(10, agora);
+        return (produto, comanda.Id);
+    }
+
+    [Fact]
+    public void AdicionarItem_ProdutoNovo_CriaItemERecalculaTotal()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+
+        var detalhe = repositorio.AdicionarItem(comandaId, produto, 2, DateTime.UtcNow);
+
+        Assert.Single(detalhe.Itens);
+        Assert.Equal(2, detalhe.Itens[0].Quantidade);
+        Assert.Equal(1000, detalhe.Itens[0].SubtotalCentavos);
+        Assert.Equal(1000, detalhe.Comanda.TotalCentavos);
+    }
+
+    [Fact]
+    public void AdicionarItem_MesmoProdutoMesmoPreco_IncrementaQuantidadeEmVezDeDuplicar()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow);
+
+        var detalhe = repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow);
+
+        Assert.Single(detalhe.Itens);
+        Assert.Equal(2, detalhe.Itens[0].Quantidade);
+        Assert.Equal(1000, detalhe.Comanda.TotalCentavos);
+    }
+
+    [Fact]
+    public void AdicionarItem_MesmoProdutoPrecoDiferente_CriaLinhaNova()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow);
+
+        var produtoComNovoPreco = new Produto
+        {
+            Id = produto.Id, CategoriaId = produto.CategoriaId, Nome = produto.Nome,
+            PrecoCentavos = 700, Ativo = true, CriadoEm = produto.CriadoEm, AtualizadoEm = DateTime.UtcNow
+        };
+        var detalhe = repositorio.AdicionarItem(comandaId, produtoComNovoPreco, 1, DateTime.UtcNow);
+
+        Assert.Equal(2, detalhe.Itens.Count);
+        Assert.Equal(500 + 700, detalhe.Comanda.TotalCentavos);
+    }
+
+    [Fact]
+    public void AlterarQuantidade_ItemExistente_RecalculaSubtotalETotal()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        var item = repositorio.AdicionarItem(comandaId, produto, 3, DateTime.UtcNow).Itens[0];
+
+        var detalhe = repositorio.AlterarQuantidade(item.Id, 1, DateTime.UtcNow);
+
+        Assert.Equal(1, detalhe.Itens[0].Quantidade);
+        Assert.Equal(500, detalhe.Itens[0].SubtotalCentavos);
+        Assert.Equal(500, detalhe.Comanda.TotalCentavos);
+    }
+
+    [Fact]
+    public void RemoverItem_ItemExistente_RemoveERecalculaTotal()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        var item = repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow).Itens[0];
+
+        var detalhe = repositorio.RemoverItem(item.Id, DateTime.UtcNow);
+
+        Assert.Empty(detalhe.Itens);
+        Assert.Equal(0, detalhe.Comanda.TotalCentavos);
+    }
+
+    [Fact]
+    public void CancelarComanda_ComandaAberta_MarcaCanceladaEDefineFechadaEm()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var comanda = repositorio.AbrirComanda(20, DateTime.UtcNow);
+
+        var cancelada = repositorio.CancelarComanda(comanda.Id, DateTime.UtcNow);
+
+        Assert.Equal(StatusComanda.Cancelada, cancelada.Status);
+        Assert.NotNull(cancelada.FechadaEm);
+    }
+
+    [Fact]
+    public void AdicionarItem_ComandaCancelada_LancaExcecao()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.CancelarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
+            () => repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow));
     }
 }
