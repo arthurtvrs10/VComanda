@@ -1,6 +1,6 @@
 using System.Windows;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Infrastructure.Concurrency;
@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
 {
     private SingleInstanceGuard? _guard;
     private ILogger? _logger;
+    private ServiceProvider? _serviceProvider;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -38,17 +39,20 @@ public partial class App : System.Windows.Application
         _logger = LoggingConfigurator.CreateLogger(paths.LogsDirectory);
         _logger.Information("Iniciando Varthex Comanda");
 
-        IClock clock = new SystemClock();
+        var services = new ServiceCollection();
+        services.AddSingleton(paths);
+        services.AddSingleton(_logger);
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddDbContextFactory<VarthexComandaDbContext>(options =>
+            options.UseSqlite($"Data Source={paths.DatabasePath};Foreign Keys=True"));
+
+        _serviceProvider = services.BuildServiceProvider();
 
         try
         {
-            var connection = new SqliteConnection($"Data Source={paths.DatabasePath};Foreign Keys=True");
-            connection.Open();
-
-            var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
-                .UseSqlite(connection, contextOwnsConnection: true)
-                .Options;
-            using var dbContext = new VarthexComandaDbContext(options);
+            var factory = _serviceProvider.GetRequiredService<IDbContextFactory<VarthexComandaDbContext>>();
+            var clock = _serviceProvider.GetRequiredService<IClock>();
+            using var dbContext = factory.CreateDbContext();
 
             var pendentes = dbContext.Database.GetPendingMigrations().ToList();
             if (pendentes.Count > 0)
@@ -98,6 +102,7 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.Information("Encerrando Varthex Comanda");
+        _serviceProvider?.Dispose();
         (_logger as IDisposable)?.Dispose();
         _guard?.Dispose();
         base.OnExit(e);
