@@ -33,7 +33,7 @@
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `Resultado<T> { bool Sucesso; T? Valor; IReadOnlyList<string> Erros; static Ok(T); static Falha(params string[]); }`, `ICategoriaRepository { Categoria? BuscarPorId(int); IReadOnlyList<Categoria> ListarAtivas(); bool ExisteNome(string, int? ignorarId = null); Categoria Salvar(Categoria); }`, `IProdutoRepository { Produto? BuscarPorId(int); IReadOnlyList<Produto> Pesquisar(int? categoriaId, string? texto); Produto Salvar(Produto); }` — all consumed by every later task.
+- Produces: `Resultado<T> where T : class { bool Sucesso; T? Valor; IReadOnlyList<string> Erros; static Ok(T); static Falha(params string[]); }`, `ICategoriaRepository { Categoria? BuscarPorId(int); IReadOnlyList<Categoria> ListarAtivas(); bool ExisteNome(string, int? ignorarId = null); Categoria Salvar(Categoria); }`, `IProdutoRepository { Produto? BuscarPorId(int); IReadOnlyList<Produto> Pesquisar(int? categoriaId, string? texto); Produto Salvar(Produto); }` — all consumed by every later task.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -50,17 +50,17 @@ public class ResultadoTests
     [Fact]
     public void Ok_ExpoeValorESucessoVerdadeiro()
     {
-        var resultado = Resultado<int>.Ok(42);
+        var resultado = Resultado<string>.Ok("valor");
 
         Assert.True(resultado.Sucesso);
-        Assert.Equal(42, resultado.Valor);
+        Assert.Equal("valor", resultado.Valor);
         Assert.Empty(resultado.Erros);
     }
 
     [Fact]
     public void Falha_ExpoeErrosESucessoFalso()
     {
-        var resultado = Resultado<int>.Falha("Erro 1", "Erro 2");
+        var resultado = Resultado<string>.Falha("Erro 1", "Erro 2");
 
         Assert.False(resultado.Sucesso);
         Assert.Null(resultado.Valor);
@@ -68,6 +68,8 @@ public class ResultadoTests
     }
 }
 ```
+
+`T` is tested here with `string`, not `int`, deliberately — see the `where T : class` constraint below.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -85,7 +87,7 @@ Expected: compilation error — `Resultado<T>` does not exist.
 ```csharp
 namespace VarthexComanda.Application.Catalogo;
 
-public class Resultado<T>
+public class Resultado<T> where T : class
 {
     private Resultado(bool sucesso, T? valor, IReadOnlyList<string> erros)
     {
@@ -102,6 +104,8 @@ public class Resultado<T>
     public static Resultado<T> Falha(params string[] erros) => new(false, default, erros);
 }
 ```
+
+`where T : class` is required, not optional style: without a constraint, `T?` on an unconstrained type parameter is a nullable-reference-type *annotation* only — it does not become `Nullable<T>` at the IL level, so `default` in `Falha` resolves to `default(T)` (e.g. `0` for `int`, not `null`) even though the property's declared type reads `T?`. Every real use of `Resultado<T>` in this codebase is `Resultado<Categoria>`/`Resultado<Produto>` (both reference types), so the constraint costs nothing and makes `Valor` unambiguously `null` on failure.
 
 - [ ] **Step 4: Implement the repository interfaces**
 
