@@ -42,6 +42,17 @@ public partial class App : System.Windows.Application
         _logger = LoggingConfigurator.CreateLogger(paths.LogsDirectory);
         _logger.Information("Iniciando Varthex Comanda");
 
+        DispatcherUnhandledException += (sender, args) =>
+        {
+            _logger?.Error(args.Exception, "Erro nao tratado na interface");
+            MessageBox.Show(
+                "Ocorreu um erro inesperado no Varthex Comanda. Consulte os logs.",
+                "Varthex Comanda",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            args.Handled = true;
+        };
+
         var services = new ServiceCollection();
         services.AddSingleton(paths);
         services.AddSingleton(_logger);

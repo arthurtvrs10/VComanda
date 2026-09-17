@@ -78,6 +78,11 @@ public partial class ProdutosViewModel : ObservableObject
     {
         if (value is null)
         {
+            NomeProduto = string.Empty;
+            CategoriaProduto = null;
+            PrecoProdutoReais = string.Empty;
+            ProdutoAtivo = true;
+            Mensagem = string.Empty;
             return;
         }
 
@@ -97,6 +102,12 @@ public partial class ProdutosViewModel : ObservableObject
         {
             Produtos.Add(produto);
         }
+    }
+
+    [RelayCommand]
+    private void LimparFiltro()
+    {
+        CategoriaFiltro = null;
     }
 
     [RelayCommand]
@@ -124,18 +135,25 @@ public partial class ProdutosViewModel : ObservableObject
             return;
         }
 
-        var resultado = ProdutoSelecionado is null
-            ? _cadastrarProduto.Executar(NomeProduto, CategoriaProduto.Id, precoCentavos)
-            : _alterarProduto.Executar(ProdutoSelecionado.Id, NomeProduto, CategoriaProduto.Id, precoCentavos, ProdutoAtivo);
-
-        if (!resultado.Sucesso)
+        try
         {
-            Mensagem = string.Join(" ", resultado.Erros);
-            return;
-        }
+            var resultado = ProdutoSelecionado is null
+                ? _cadastrarProduto.Executar(NomeProduto, CategoriaProduto.Id, precoCentavos)
+                : _alterarProduto.Executar(ProdutoSelecionado.Id, NomeProduto, CategoriaProduto.Id, precoCentavos, ProdutoAtivo);
 
-        Novo();
-        Pesquisar();
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
+
+            Novo();
+            Pesquisar();
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível salvar o produto. Tente novamente.";
+        }
     }
 
     [RelayCommand]
@@ -147,30 +165,44 @@ public partial class ProdutosViewModel : ObservableObject
             return;
         }
 
-        var resultado = _desativarProduto.Executar(ProdutoSelecionado.Id);
-        if (!resultado.Sucesso)
+        try
         {
-            Mensagem = string.Join(" ", resultado.Erros);
-            return;
-        }
+            var resultado = _desativarProduto.Executar(ProdutoSelecionado.Id);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
 
-        Novo();
-        Pesquisar();
+            Novo();
+            Pesquisar();
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível desativar o produto. Tente novamente.";
+        }
     }
 
     [RelayCommand]
     private void AdicionarCategoria()
     {
-        var resultado = _cadastrarCategoria.Executar(NovaCategoriaNome);
-        if (!resultado.Sucesso)
+        try
         {
-            Mensagem = string.Join(" ", resultado.Erros);
-            return;
-        }
+            var resultado = _cadastrarCategoria.Executar(NovaCategoriaNome);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
 
-        NovaCategoriaNome = string.Empty;
-        Mensagem = string.Empty;
-        CarregarCategorias();
+            NovaCategoriaNome = string.Empty;
+            Mensagem = string.Empty;
+            CarregarCategorias();
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível adicionar a categoria. Tente novamente.";
+        }
     }
 
     private void CarregarCategorias()
@@ -190,7 +222,8 @@ public partial class ProdutosViewModel : ObservableObject
     private static bool TentarConverterPreco(string texto, out long precoCentavos)
     {
         precoCentavos = 0;
-        if (!decimal.TryParse(texto, NumberStyles.Number, CulturaMoeda, out var valor))
+        const NumberStyles estilo = NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite;
+        if (!decimal.TryParse(texto, estilo, CulturaMoeda, out var valor))
         {
             return false;
         }

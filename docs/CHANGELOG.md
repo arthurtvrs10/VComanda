@@ -2,8 +2,11 @@
 
 ## 1.5 - 2026-09-17
 
-- implementado o catálogo (Etapa 2): cadastro, alteração, desativação e busca de
-  categorias e produtos (RF01-05);
+- implementado o catálogo (Etapa 2): cadastro e busca de produtos, cadastro de
+  categorias (RF01, RF03, RF05); os casos de uso de alteração e desativação de
+  categoria (RF02) existem e têm testes, mas ainda não têm tela própria —
+  produtos podem ser alterados e desativados pela tela "Produtos", categorias
+  ainda não;
 - casos de uso de catálogo validam nome obrigatório, preço positivo em centavos e
   categoria ativa, sem exceções para erros esperados;
 - repositórios de categoria e produto sobre `IDbContextFactory`, com DbContext
@@ -12,6 +15,11 @@
   de verdade (container, `IDbContextFactory` registrado, ViewModels resolvidas
   pelo container) — fecha a pendência de DI/MVVM deixada em aberto na Etapa 0+1;
 - `MainWindow` deixa de ser uma janela vazia e passa a exibir a tela "Produtos";
+- limitação conhecida: busca por nome e detecção de duplicidade de categoria
+  ignoram maiúsculas/minúsculas apenas em caracteres ASCII (SQLite `LOWER()`/
+  `NOCASE` não tratam acentos) — nomes acentuados como "Açaí" podem não bater
+  em buscas ou podem ser duplicados sob acentuação diferente; correção própria
+  fica para uma fatia futura;
 - ainda sem comandas, itens ou vendas (RF06+) — entra na próxima fatia.
 
 ## 1.4 - 2026-09-16
