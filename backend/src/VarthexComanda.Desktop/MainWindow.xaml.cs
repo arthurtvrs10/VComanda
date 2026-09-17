@@ -5,9 +5,9 @@ namespace VarthexComanda.Desktop;
 
 public partial class MainWindow : Window
 {
-    public MainWindow(ProdutosViewModel viewModel)
+    public MainWindow(ProdutosView produtosView)
     {
         InitializeComponent();
-        DataContext = viewModel;
+        ConteudoPrincipal.Content = produtosView;
     }
 }

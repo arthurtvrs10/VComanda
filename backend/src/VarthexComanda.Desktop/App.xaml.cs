@@ -69,6 +69,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<DesativarProduto>();
         services.AddTransient<PesquisarProdutos>();
         services.AddTransient<ProdutosViewModel>();
+        services.AddTransient<ProdutosView>();
         services.AddTransient<MainWindow>();
 
         _serviceProvider = services.BuildServiceProvider();
