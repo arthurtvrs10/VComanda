@@ -1,5 +1,19 @@
 # Histórico de alterações
 
+## 1.5 - 2026-09-17
+
+- implementado o catálogo (Etapa 2): cadastro, alteração, desativação e busca de
+  categorias e produtos (RF01-05);
+- casos de uso de catálogo validam nome obrigatório, preço positivo em centavos e
+  categoria ativa, sem exceções para erros esperados;
+- repositórios de categoria e produto sobre `IDbContextFactory`, com DbContext
+  de curta duração por operação;
+- composição do Desktop passa a usar `Microsoft.Extensions.DependencyInjection`
+  de verdade (container, `IDbContextFactory` registrado, ViewModels resolvidas
+  pelo container) — fecha a pendência de DI/MVVM deixada em aberto na Etapa 0+1;
+- `MainWindow` deixa de ser uma janela vazia e passa a exibir a tela "Produtos";
+- ainda sem comandas, itens ou vendas (RF06+) — entra na próxima fatia.
+
 ## 1.4 - 2026-09-16
 
 - criada a base técnica do código em `backend/` (Etapas 0 e 1 do guia de implementação);
