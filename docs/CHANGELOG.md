@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 1.4 - 2026-09-16
+
+- criada a base técnica do código em `backend/` (Etapas 0 e 1 do guia de implementação);
+- solução .NET 10 com Domain, Application, Infrastructure e Desktop (WPF);
+- SQLite + EF Core mapeados a partir de `database/schema.sql`, com migração inicial;
+- instância única via mutex, backup preventivo antes de migrar e logging rotativo com Serilog;
+- ainda sem telas ou regras de negócio (RF01+) — entra na próxima fatia.
+
 ## 1.3 - 2026-09-13
 
 - adotado o nome oficial Varthex Comanda;
