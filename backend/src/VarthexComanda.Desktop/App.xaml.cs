@@ -1,11 +1,14 @@
 using System.Windows;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using VarthexComanda.Application.Abstractions;
+using VarthexComanda.Application.Catalogo;
+using VarthexComanda.Desktop.Catalogo;
 using VarthexComanda.Infrastructure.Concurrency;
 using VarthexComanda.Infrastructure.Logging;
 using VarthexComanda.Infrastructure.Persistence;
+using VarthexComanda.Infrastructure.Persistence.Catalogo;
 using VarthexComanda.Infrastructure.Storage;
 using VarthexComanda.Infrastructure.Time;
 
@@ -15,6 +18,7 @@ public partial class App : System.Windows.Application
 {
     private SingleInstanceGuard? _guard;
     private ILogger? _logger;
+    private ServiceProvider? _serviceProvider;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -38,17 +42,42 @@ public partial class App : System.Windows.Application
         _logger = LoggingConfigurator.CreateLogger(paths.LogsDirectory);
         _logger.Information("Iniciando Varthex Comanda");
 
-        IClock clock = new SystemClock();
+        DispatcherUnhandledException += (sender, args) =>
+        {
+            _logger?.Error(args.Exception, "Erro nao tratado na interface");
+            MessageBox.Show(
+                "Ocorreu um erro inesperado no Varthex Comanda. Consulte os logs.",
+                "Varthex Comanda",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            args.Handled = true;
+        };
+
+        var services = new ServiceCollection();
+        services.AddSingleton(paths);
+        services.AddSingleton(_logger);
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddDbContextFactory<VarthexComandaDbContext>(options =>
+            options.UseSqlite($"Data Source={paths.DatabasePath};Foreign Keys=True"));
+        services.AddTransient<ICategoriaRepository, EfCategoriaRepository>();
+        services.AddTransient<IProdutoRepository, EfProdutoRepository>();
+        services.AddTransient<CadastrarCategoria>();
+        services.AddTransient<AlterarCategoria>();
+        services.AddTransient<ListarCategoriasAtivas>();
+        services.AddTransient<CadastrarProduto>();
+        services.AddTransient<AlterarProduto>();
+        services.AddTransient<DesativarProduto>();
+        services.AddTransient<PesquisarProdutos>();
+        services.AddTransient<ProdutosViewModel>();
+        services.AddTransient<MainWindow>();
+
+        _serviceProvider = services.BuildServiceProvider();
 
         try
         {
-            var connection = new SqliteConnection($"Data Source={paths.DatabasePath};Foreign Keys=True");
-            connection.Open();
-
-            var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
-                .UseSqlite(connection, contextOwnsConnection: true)
-                .Options;
-            using var dbContext = new VarthexComandaDbContext(options);
+            var factory = _serviceProvider.GetRequiredService<IDbContextFactory<VarthexComandaDbContext>>();
+            var clock = _serviceProvider.GetRequiredService<IClock>();
+            using var dbContext = factory.CreateDbContext();
 
             var pendentes = dbContext.Database.GetPendingMigrations().ToList();
             if (pendentes.Count > 0)
@@ -92,12 +121,13 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        new MainWindow().Show();
+        _serviceProvider.GetRequiredService<MainWindow>().Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.Information("Encerrando Varthex Comanda");
+        _serviceProvider?.Dispose();
         (_logger as IDisposable)?.Dispose();
         _guard?.Dispose();
         base.OnExit(e);
