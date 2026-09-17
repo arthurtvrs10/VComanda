@@ -1442,7 +1442,7 @@ public partial class App : System.Windows.Application
             }
 
             var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
-                .UseSqlite(connection)
+                .UseSqlite(connection, contextOwnsConnection: true)
                 .Options;
             using var dbContext = new VarthexComandaDbContext(options);
             dbContext.Database.Migrate();
