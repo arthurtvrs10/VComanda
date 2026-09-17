@@ -109,10 +109,12 @@ dependem de casos de uso e nunca de VarthexDbContext").
   nunca `double`); categoria deve existir E estar ativa (US02: "categoria ativa,
   nome obrigatório e preço positivo em centavos") — senão
   `Resultado<Produto>.Falha("Selecione uma categoria ativa.")`.
-- **AlterarProduto(id, nome, categoriaId, precoCentavos)** → `Resultado<Produto>`.
-  Mesmas validações de `CadastrarProduto`. Alterar preço não modifica itens já
-  lançados em comandas (RN05) — isso é garantido pelo snapshot em `item_comanda`
-  (já no schema; nada a fazer aqui além de não tocar em `item_comanda`).
+- **AlterarProduto(id, nome, categoriaId, precoCentavos, ativo)** → `Resultado<Produto>`.
+  Mesmas validações de `CadastrarProduto` (nome, preço, categoria ativa). Inclui
+  `ativo` para permitir tanto desativar quanto reativar pelo mesmo formulário.
+  Alterar preço não modifica itens já lançados em comandas (RN05) — isso é
+  garantido pelo snapshot em `item_comanda` (já no schema; nada a fazer aqui além
+  de não tocar em `item_comanda`).
 - **DesativarProduto(id)** → `Resultado<Produto>`. Define `Ativo = false`; não
   exclui fisicamente (RN17). Reativar é o mesmo fluxo de `AlterarProduto` com
   `ativo = true` — não precisa de caso de uso próprio.
