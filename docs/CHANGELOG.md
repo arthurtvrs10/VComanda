@@ -1,5 +1,25 @@
 # Histórico de alterações
 
+## 1.6 - 2026-09-17
+
+- implementadas comandas (Etapa 3): grade de números abertos, abertura,
+  catálogo rápido, lançamento/alteração/remoção de itens e cancelamento
+  (RF06-13);
+- lançar o mesmo produto duas vezes na mesma comanda incrementa a
+  quantidade de uma única linha em vez de duplicar, desde que o preço
+  não tenha mudado entre os dois lançamentos;
+- abrir comanda não faz pré-checagem de número livre — insere direto e
+  deixa o índice único do banco ser a fonte da verdade, cobrindo o caso
+  de concorrência (RN01);
+- `MainWindow` deixa de mostrar só Produtos e vira um shell com dois
+  botões (Atendimento, Produtos) — Atendimento abre por padrão, conforme
+  a tela inicial esperada;
+- criado o projeto `VarthexComanda.Desktop.Tests`, com testes de unidade
+  reais para `AtendimentoViewModel` e (retroativamente) `ProdutosViewModel`
+  — fecha a lacuna que a Etapa 2 deixou aberta e que tinha deixado passar
+  dois bugs reais;
+- ainda sem encerramento nem venda (RF14-17) — entra na próxima fatia.
+
 ## 1.5 - 2026-09-17
 
 - implementado o catálogo (Etapa 2): cadastro e busca de produtos, cadastro de
