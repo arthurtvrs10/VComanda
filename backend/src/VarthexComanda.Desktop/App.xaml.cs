@@ -77,6 +77,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<AlterarQuantidade>();
         services.AddTransient<RemoverItem>();
         services.AddTransient<CancelarComanda>();
+        services.AddTransient<IConfirmador, MessageBoxConfirmador>();
         services.AddTransient<AtendimentoViewModel>();
         services.AddTransient<AtendimentoView>();
         services.AddTransient<ProdutosViewModel>();
@@ -120,6 +121,8 @@ public partial class App : System.Windows.Application
             }
 
             _logger.Information("Banco pronto em {Caminho}", paths.DatabasePath);
+
+            _serviceProvider.GetRequiredService<MainWindow>().Show();
         }
         catch (Exception ex)
         {
@@ -132,8 +135,6 @@ public partial class App : System.Windows.Application
             Shutdown();
             return;
         }
-
-        _serviceProvider.GetRequiredService<MainWindow>().Show();
     }
 
     protected override void OnExit(ExitEventArgs e)

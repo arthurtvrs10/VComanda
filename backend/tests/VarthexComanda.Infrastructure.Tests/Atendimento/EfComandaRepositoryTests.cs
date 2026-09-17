@@ -199,4 +199,39 @@ public class EfComandaRepositoryTests : IDisposable
         Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
             () => repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow));
     }
+
+    [Fact]
+    public void AlterarQuantidade_ComandaCancelada_LancaExcecao()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        var item = repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow).Itens[0];
+        repositorio.CancelarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
+            () => repositorio.AlterarQuantidade(item.Id, 2, DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void RemoverItem_ComandaCancelada_LancaExcecao()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        var item = repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow).Itens[0];
+        repositorio.CancelarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
+            () => repositorio.RemoverItem(item.Id, DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void CancelarComanda_ComandaJaCancelada_LancaExcecao()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var comanda = repositorio.AbrirComanda(20, DateTime.UtcNow);
+        repositorio.CancelarComanda(comanda.Id, DateTime.UtcNow);
+
+        Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
+            () => repositorio.CancelarComanda(comanda.Id, DateTime.UtcNow));
+    }
 }

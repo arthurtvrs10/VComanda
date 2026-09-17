@@ -8,6 +8,7 @@
     <UserControl.Resources>
         <local:NuloParaVisibilidadeConverter x:Key="VisivelSeComandaAberta" />
         <local:NuloParaVisibilidadeInversoConverter x:Key="VisivelSeGrade" />
+        <local:CentavosParaMoedaConverter x:Key="Moeda" />
     </UserControl.Resources>
     <Grid Margin="12">
 
@@ -46,16 +47,24 @@
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,8">
-                <TextBlock Text="{Binding ComandaAtual.Numero, StringFormat='Comanda {0}'}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,16,0" />
-                <Button Content="Voltar para a grade" Command="{Binding FecharEdicaoCommand}" Margin="0,0,8,0" />
-                <Button Content="Cancelar comanda" Command="{Binding CancelarComandaAtualCommand}" />
-            </StackPanel>
+            <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding ComandaAtual.Numero, StringFormat='Comanda {0}'}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,16,0" />
+                    <Button Content="Voltar para a grade" Command="{Binding FecharEdicaoCommand}" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="Cancelar comanda" Command="{Binding CancelarComandaAtualCommand}"
+                        HorizontalAlignment="Right" Background="#FFF3E0" />
+            </Grid>
 
             <StackPanel Grid.Row="1" Grid.Column="0">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <ComboBox Width="160" ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
                               SelectedItem="{Binding CategoriaCatalogo}" Margin="0,0,8,0" />
+                    <Button Content="Limpar filtro" Command="{Binding LimparFiltroCommand}" Margin="0,0,8,0" />
                     <TextBox Width="180" Text="{Binding TextoBuscaCatalogo, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <ItemsControl ItemsSource="{Binding ProdutosCatalogo}">
@@ -71,7 +80,7 @@
                                     CommandParameter="{Binding}">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Nome}" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding PrecoCentavos}" />
+                                    <TextBlock Text="{Binding PrecoCentavos, Converter={StaticResource Moeda}}" />
                                 </StackPanel>
                             </Button>
                         </DataTemplate>
@@ -85,7 +94,8 @@
                         <GridView>
                             <GridViewColumn Header="Produto" DisplayMemberBinding="{Binding NomeProduto}" Width="160" />
                             <GridViewColumn Header="Qtd" DisplayMemberBinding="{Binding Quantidade}" Width="50" />
-                            <GridViewColumn Header="Subtotal" DisplayMemberBinding="{Binding SubtotalCentavos}" Width="90" />
+                            <GridViewColumn Header="Preço unit." DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="90" />
+                            <GridViewColumn Header="Subtotal" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="90" />
                             <GridViewColumn Width="150">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -106,7 +116,10 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <TextBlock Text="{Binding ComandaAtual.TotalCentavos, StringFormat='Total: {0} centavos'}" FontWeight="Bold" FontSize="16" Margin="0,12,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <TextBlock Text="Total: " FontWeight="Bold" FontSize="16" />
+                    <TextBlock Text="{Binding ComandaAtual.TotalCentavos, Converter={StaticResource Moeda}}" FontWeight="Bold" FontSize="16" />
+                </StackPanel>
                 <TextBlock Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" Margin="0,12,0,0" />
             </StackPanel>
         </Grid>

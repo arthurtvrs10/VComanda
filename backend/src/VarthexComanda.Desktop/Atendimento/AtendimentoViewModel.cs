@@ -17,6 +17,7 @@ public partial class AtendimentoViewModel : ObservableObject
     private readonly IComandaRepository _comandas;
     private readonly ListarCategoriasAtivas _listarCategoriasAtivas;
     private readonly PesquisarProdutos _pesquisarProdutos;
+    private readonly IConfirmador _confirmador;
 
     public AtendimentoViewModel(
         AbrirComanda abrirComanda,
@@ -26,7 +27,8 @@ public partial class AtendimentoViewModel : ObservableObject
         CancelarComanda cancelarComanda,
         IComandaRepository comandas,
         ListarCategoriasAtivas listarCategoriasAtivas,
-        PesquisarProdutos pesquisarProdutos)
+        PesquisarProdutos pesquisarProdutos,
+        IConfirmador confirmador)
     {
         _abrirComanda = abrirComanda;
         _adicionarItem = adicionarItem;
@@ -36,6 +38,7 @@ public partial class AtendimentoViewModel : ObservableObject
         _comandas = comandas;
         _listarCategoriasAtivas = listarCategoriasAtivas;
         _pesquisarProdutos = pesquisarProdutos;
+        _confirmador = confirmador;
 
         ComandasAbertas = new ObservableCollection<Comanda>();
         Categorias = new ObservableCollection<Categoria>();
@@ -82,6 +85,12 @@ public partial class AtendimentoViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void LimparFiltro()
+    {
+        CategoriaCatalogo = null;
+    }
+
+    [RelayCommand]
     private void Abrir()
     {
         if (!int.TryParse(NovoNumero, out var numero))
@@ -90,17 +99,24 @@ public partial class AtendimentoViewModel : ObservableObject
             return;
         }
 
-        var resultado = _abrirComanda.Executar(numero);
-        if (!resultado.Sucesso)
+        try
         {
-            Mensagem = string.Join(" ", resultado.Erros);
-            return;
-        }
+            var resultado = _abrirComanda.Executar(numero);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
 
-        NovoNumero = string.Empty;
-        Mensagem = string.Empty;
-        AtualizarComandasAbertas();
-        AbrirParaEdicao(resultado.Valor!.Id);
+            NovoNumero = string.Empty;
+            Mensagem = string.Empty;
+            AtualizarComandasAbertas();
+            AbrirParaEdicao(resultado.Valor!.Id);
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível abrir a comanda. Tente novamente.";
+        }
     }
 
     [RelayCommand]
@@ -138,27 +154,73 @@ public partial class AtendimentoViewModel : ObservableObject
             return;
         }
 
-        AplicarResultado(_adicionarItem.Executar(ComandaAtual.Id, produto.Id, 1));
+        try
+        {
+            AplicarResultado(_adicionarItem.Executar(ComandaAtual.Id, produto.Id, 1));
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível adicionar o produto à comanda. Tente novamente.";
+        }
     }
 
     [RelayCommand]
-    private void AumentarQuantidade(ItemComanda item) =>
-        AplicarResultado(_alterarQuantidade.Executar(item.Id, item.Quantidade + 1));
+    private void AumentarQuantidade(ItemComanda item)
+    {
+        try
+        {
+            AplicarResultado(_alterarQuantidade.Executar(item.Id, item.Quantidade + 1));
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível atualizar a quantidade do item. Tente novamente.";
+        }
+    }
 
     [RelayCommand]
     private void DiminuirQuantidade(ItemComanda item)
     {
-        if (item.Quantidade <= 1)
+        try
         {
-            AplicarResultado(_removerItem.Executar(item.Id));
-            return;
-        }
+            if (item.Quantidade <= 1)
+            {
+                if (!_confirmador.Confirmar("Remover item", MensagemRemocao(item)))
+                {
+                    return;
+                }
 
-        AplicarResultado(_alterarQuantidade.Executar(item.Id, item.Quantidade - 1));
+                AplicarResultado(_removerItem.Executar(item.Id));
+                return;
+            }
+
+            AplicarResultado(_alterarQuantidade.Executar(item.Id, item.Quantidade - 1));
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível atualizar a quantidade do item. Tente novamente.";
+        }
     }
 
     [RelayCommand]
-    private void Remover(ItemComanda item) => AplicarResultado(_removerItem.Executar(item.Id));
+    private void Remover(ItemComanda item)
+    {
+        if (!_confirmador.Confirmar("Remover item", MensagemRemocao(item)))
+        {
+            return;
+        }
+
+        try
+        {
+            AplicarResultado(_removerItem.Executar(item.Id));
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível remover o item. Tente novamente.";
+        }
+    }
+
+    private static string MensagemRemocao(ItemComanda item) =>
+        $"Deseja remover o item \"{item.NomeProduto}\" da comanda?";
 
     [RelayCommand]
     private void CancelarComandaAtual()
@@ -168,16 +230,33 @@ public partial class AtendimentoViewModel : ObservableObject
             return;
         }
 
-        var resultado = _cancelarComanda.Executar(ComandaAtual.Id);
-        if (!resultado.Sucesso)
+        if (Itens.Count > 0)
         {
-            Mensagem = string.Join(" ", resultado.Erros);
-            return;
+            var mensagem = $"A comanda {ComandaAtual.Numero} possui {Itens.Count} item(ns) e total de " +
+                $"{CentavosParaMoedaConverter.Formatar(ComandaAtual.TotalCentavos)}. Deseja cancelar mesmo assim?";
+            if (!_confirmador.Confirmar("Cancelar comanda", mensagem))
+            {
+                return;
+            }
         }
 
-        Mensagem = string.Empty;
-        FecharEdicao();
-        AtualizarComandasAbertas();
+        try
+        {
+            var resultado = _cancelarComanda.Executar(ComandaAtual.Id);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
+
+            Mensagem = string.Empty;
+            FecharEdicao();
+            AtualizarComandasAbertas();
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível cancelar a comanda. Tente novamente.";
+        }
     }
 
     private void AplicarResultado(Resultado<ComandaComItens> resultado)
@@ -207,12 +286,19 @@ public partial class AtendimentoViewModel : ObservableObject
         }
     }
 
+    public void AtualizarCategorias() => CarregarCategorias();
+
     private void CarregarCategorias()
     {
+        var categoriaSelecionadaId = CategoriaCatalogo?.Id;
         Categorias.Clear();
         foreach (var categoria in _listarCategoriasAtivas.Executar())
         {
             Categorias.Add(categoria);
+        }
+        if (categoriaSelecionadaId is not null)
+        {
+            CategoriaCatalogo = Categorias.FirstOrDefault(c => c.Id == categoriaSelecionadaId);
         }
         PesquisarCatalogo();
     }

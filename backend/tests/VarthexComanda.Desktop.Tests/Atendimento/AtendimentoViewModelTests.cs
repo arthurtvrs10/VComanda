@@ -9,7 +9,7 @@ namespace VarthexComanda.Desktop.Tests.Atendimento;
 
 public class AtendimentoViewModelTests
 {
-    private static (AtendimentoViewModel viewModel, FakeProdutoRepository produtos) CriarViewModel()
+    private static (AtendimentoViewModel viewModel, FakeProdutoRepository produtos, FakeConfirmador confirmador) CriarViewModel(bool confirmar = true)
     {
         var categorias = new FakeCategoriaRepository();
         var relogio = new FakeClock();
@@ -17,6 +17,7 @@ public class AtendimentoViewModelTests
         var produtos = new FakeProdutoRepository();
         new CadastrarProduto(produtos, categorias, relogio).Executar("Refrigerante", categoria.Id, 500);
         var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = confirmar };
 
         var viewModel = new AtendimentoViewModel(
             new AbrirComanda(comandas, relogio),
@@ -26,15 +27,16 @@ public class AtendimentoViewModelTests
             new CancelarComanda(comandas, relogio),
             comandas,
             new ListarCategoriasAtivas(categorias),
-            new PesquisarProdutos(produtos));
+            new PesquisarProdutos(produtos),
+            confirmador);
 
-        return (viewModel, produtos);
+        return (viewModel, produtos, confirmador);
     }
 
     [Fact]
     public void Abrir_NumeroValido_CriaComandaEMostraNaGrade()
     {
-        var (viewModel, _) = CriarViewModel();
+        var (viewModel, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
 
         viewModel.AbrirCommand.Execute(null);
@@ -47,7 +49,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void Abrir_MesmoNumeroDuasVezes_SegundaFalhaSemDuplicarNaGrade()
     {
-        var (viewModel, _) = CriarViewModel();
+        var (viewModel, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
 
@@ -61,7 +63,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void AdicionarProdutoDuasVezes_IncrementaQuantidadeEmVezDeDuplicar()
     {
-        var (viewModel, produtos) = CriarViewModel();
+        var (viewModel, produtos, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -75,14 +77,15 @@ public class AtendimentoViewModelTests
     }
 
     [Fact]
-    public void DiminuirQuantidadeAteZero_RemoveItem()
+    public void DiminuirQuantidadeAteZero_ConfirmadorAceita_RemoveItem()
     {
-        var (viewModel, produtos) = CriarViewModel();
+        var (viewModel, produtos, confirmador) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
         viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
 
+        confirmador.ProximaResposta = true;
         viewModel.DiminuirQuantidadeCommand.Execute(viewModel.Itens[0]);
 
         Assert.Empty(viewModel.Itens);
@@ -90,9 +93,41 @@ public class AtendimentoViewModelTests
     }
 
     [Fact]
+    public void DiminuirQuantidadeAteZero_ConfirmadorRecusa_ItemPermanece()
+    {
+        var (viewModel, produtos, confirmador) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+
+        confirmador.ProximaResposta = false;
+        viewModel.DiminuirQuantidadeCommand.Execute(viewModel.Itens[0]);
+
+        Assert.Single(viewModel.Itens);
+        Assert.Equal(1, viewModel.Itens[0].Quantidade);
+        Assert.Equal(500, viewModel.ComandaAtual!.TotalCentavos);
+    }
+
+    [Fact]
+    public void Remover_ConfirmadorRecusa_ItemPermanece()
+    {
+        var (viewModel, produtos, confirmador) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+
+        confirmador.ProximaResposta = false;
+        viewModel.RemoverCommand.Execute(viewModel.Itens[0]);
+
+        Assert.Single(viewModel.Itens);
+    }
+
+    [Fact]
     public void CancelarComandaAtual_LiberaNumeroNaGrade()
     {
-        var (viewModel, _) = CriarViewModel();
+        var (viewModel, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
 
@@ -100,5 +135,21 @@ public class AtendimentoViewModelTests
 
         Assert.Empty(viewModel.ComandasAbertas);
         Assert.Null(viewModel.ComandaAtual);
+    }
+
+    [Fact]
+    public void CancelarComandaAtual_ConfirmadorRecusa_ComandaPermaneceAberta()
+    {
+        var (viewModel, produtos, confirmador) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+
+        confirmador.ProximaResposta = false;
+        viewModel.CancelarComandaAtualCommand.Execute(null);
+
+        Assert.NotNull(viewModel.ComandaAtual);
+        Assert.Single(viewModel.ComandasAbertas);
     }
 }

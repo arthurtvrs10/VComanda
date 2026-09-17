@@ -72,7 +72,7 @@ public class EfComandaRepository : IComandaRepository
             throw new ComandaNaoAbertaException();
         }
 
-        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comandaId).ToList();
+        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comandaId).OrderBy(i => i.Id).ToList();
         var itemExistente = itens.FirstOrDefault(i => i.ProdutoId == produto.Id && i.PrecoUnitarioCentavos == produto.PrecoCentavos);
 
         if (itemExistente is not null)
@@ -121,7 +121,7 @@ public class EfComandaRepository : IComandaRepository
         item.SubtotalCentavos = item.PrecoUnitarioCentavos * quantidade;
         item.AtualizadoEm = agora;
 
-        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comanda.Id).ToList();
+        var itens = contexto.ItensComanda.Where(i => i.ComandaId == comanda.Id).OrderBy(i => i.Id).ToList();
         comanda.TotalCentavos = itens.Sum(i => i.SubtotalCentavos);
         contexto.SaveChanges();
 
@@ -144,6 +144,7 @@ public class EfComandaRepository : IComandaRepository
 
         var itensRestantes = contexto.ItensComanda
             .Where(i => i.ComandaId == comanda.Id && i.Id != itemId)
+            .OrderBy(i => i.Id)
             .ToList();
         comanda.TotalCentavos = itensRestantes.Sum(i => i.SubtotalCentavos);
         contexto.SaveChanges();

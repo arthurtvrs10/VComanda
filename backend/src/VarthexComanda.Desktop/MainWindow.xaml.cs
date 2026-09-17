@@ -19,6 +19,7 @@ public partial class MainWindow : Window
 
     private void MostrarAtendimento_Click(object sender, RoutedEventArgs e)
     {
+        _atendimentoView.ViewModel.AtualizarCategorias();
         ConteudoPrincipal.Content = _atendimentoView;
     }
 
