@@ -1,6 +1,6 @@
 namespace VarthexComanda.Application.Catalogo;
 
-public class Resultado<T>
+public class Resultado<T> where T : class
 {
     private Resultado(bool sucesso, T? valor, IReadOnlyList<string> erros)
     {

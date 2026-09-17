@@ -8,17 +8,17 @@ public class ResultadoTests
     [Fact]
     public void Ok_ExpoeValorESucessoVerdadeiro()
     {
-        var resultado = Resultado<int>.Ok(42);
+        var resultado = Resultado<string>.Ok("valor");
 
         Assert.True(resultado.Sucesso);
-        Assert.Equal(42, resultado.Valor);
+        Assert.Equal("valor", resultado.Valor);
         Assert.Empty(resultado.Erros);
     }
 
     [Fact]
     public void Falha_ExpoeErrosESucessoFalso()
     {
-        var resultado = Resultado<int>.Falha("Erro 1", "Erro 2");
+        var resultado = Resultado<string>.Falha("Erro 1", "Erro 2");
 
         Assert.False(resultado.Sucesso);
         Assert.Null(resultado.Valor);
