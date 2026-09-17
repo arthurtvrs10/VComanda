@@ -50,4 +50,20 @@ public class AlterarProdutoTests
         Assert.False(resultado.Sucesso);
         Assert.Contains("Selecione uma categoria ativa.", resultado.Erros);
     }
+
+    [Fact]
+    public void Executar_ProdutoInativo_ReativaQuandoAtivoVerdadeiro()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var categoria = new CadastrarCategoria(categorias, new FakeClock()).Executar("Bebidas").Valor!;
+        var produtos = new FakeProdutoRepository();
+        var caso = new AlterarProduto(produtos, categorias, new FakeClock());
+        var produto = new CadastrarProduto(produtos, categorias, new FakeClock()).Executar("Refrigerante", categoria.Id, 500).Valor!;
+        caso.Executar(produto.Id, produto.Nome, categoria.Id, produto.PrecoCentavos, ativo: false);
+
+        var resultado = caso.Executar(produto.Id, produto.Nome, categoria.Id, produto.PrecoCentavos, ativo: true);
+
+        Assert.True(resultado.Sucesso);
+        Assert.True(resultado.Valor!.Ativo);
+    }
 }
