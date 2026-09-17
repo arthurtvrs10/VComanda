@@ -1,13 +1,29 @@
 using System.Windows;
+using VarthexComanda.Desktop.Atendimento;
 using VarthexComanda.Desktop.Catalogo;
 
 namespace VarthexComanda.Desktop;
 
 public partial class MainWindow : Window
 {
-    public MainWindow(ProdutosView produtosView)
+    private readonly AtendimentoView _atendimentoView;
+    private readonly ProdutosView _produtosView;
+
+    public MainWindow(AtendimentoView atendimentoView, ProdutosView produtosView)
     {
         InitializeComponent();
-        ConteudoPrincipal.Content = produtosView;
+        _atendimentoView = atendimentoView;
+        _produtosView = produtosView;
+        ConteudoPrincipal.Content = _atendimentoView;
+    }
+
+    private void MostrarAtendimento_Click(object sender, RoutedEventArgs e)
+    {
+        ConteudoPrincipal.Content = _atendimentoView;
+    }
+
+    private void MostrarProdutos_Click(object sender, RoutedEventArgs e)
+    {
+        ConteudoPrincipal.Content = _produtosView;
     }
 }

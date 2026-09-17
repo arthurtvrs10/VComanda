@@ -4,6 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Varthex Comanda" Height="600" Width="1000">
-    <ContentControl x:Name="ConteudoPrincipal" />
+        Title="Varthex Comanda" Height="700" Width="1200">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
+            <Button Content="Atendimento" Padding="12,4" Margin="0,0,8,0" Click="MostrarAtendimento_Click" />
+            <Button Content="Produtos" Padding="12,4" Click="MostrarProdutos_Click" />
+        </StackPanel>
+        <ContentControl x:Name="ConteudoPrincipal" />
+    </DockPanel>
 </Window>
