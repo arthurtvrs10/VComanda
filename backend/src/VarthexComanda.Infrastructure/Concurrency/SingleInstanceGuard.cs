@@ -12,7 +12,14 @@ public class SingleInstanceGuard : IDisposable
 
     public bool TryAcquire()
     {
-        _acquired = _mutex.WaitOne(TimeSpan.Zero);
+        try
+        {
+            _acquired = _mutex.WaitOne(TimeSpan.Zero);
+        }
+        catch (AbandonedMutexException)
+        {
+            _acquired = true;
+        }
         return _acquired;
     }
 

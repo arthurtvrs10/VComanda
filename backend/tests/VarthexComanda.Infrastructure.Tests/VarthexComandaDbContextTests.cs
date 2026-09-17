@@ -27,7 +27,7 @@ public class VarthexComandaDbContextTests : IDisposable
     private VarthexComandaDbContext CriarContexto()
     {
         var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
-            .UseSqlite($"Data Source={_dbPath}")
+            .UseSqlite($"Data Source={_dbPath};Foreign Keys=True")
             .Options;
         return new VarthexComandaDbContext(options);
     }
@@ -109,6 +109,38 @@ public class VarthexComandaDbContextTests : IDisposable
             FechadaEm = null,
             TotalCentavos = 0
         });
+
+        Assert.Throws<DbUpdateException>(() => contexto.SaveChanges());
+    }
+
+    [Fact]
+    public void ForeignKeys_EstaoAtivas_ImpedeExcluirCategoriaComProdutoVinculado()
+    {
+        var agora = DateTime.UtcNow;
+
+        // Insere categoria + produto vinculado num contexto próprio, que é descartado em
+        // seguida. Isso garante que o produto dependente não fique rastreado (tracked) no
+        // contexto usado para o Remove abaixo: se ambos estivessem no mesmo change tracker,
+        // o próprio EF Core detectaria a relação obrigatória "rompida" em memória e lançaria
+        // InvalidOperationException antes mesmo de enviar o DELETE ao SQLite — o que testaria
+        // a validação do EF, não a PRAGMA foreign_keys do banco. Usando um contexto novo, sem
+        // o produto carregado, o DELETE é enviado de fato ao SQLite, que é quem precisa barrar
+        // a exclusão via ON DELETE RESTRICT.
+        using (var preparacao = CriarContexto())
+        {
+            preparacao.Database.Migrate();
+            preparacao.Categorias.Add(new Categoria { Id = 1, Nome = "Bebidas", Ativo = true, CriadoEm = agora, AtualizadoEm = agora });
+            preparacao.Produtos.Add(new Produto
+            {
+                Id = 1, CategoriaId = 1, Nome = "Refrigerante", PrecoCentavos = 500,
+                Ativo = true, CriadoEm = agora, AtualizadoEm = agora
+            });
+            preparacao.SaveChanges();
+        }
+
+        using var contexto = CriarContexto();
+        var categoria = contexto.Categorias.Single(c => c.Id == 1);
+        contexto.Categorias.Remove(categoria);
 
         Assert.Throws<DbUpdateException>(() => contexto.SaveChanges());
     }

@@ -42,29 +42,33 @@ public partial class App : System.Windows.Application
 
         try
         {
-            DatabaseBackupService.BackupIfExists(paths.DatabasePath, paths.BackupsDirectory, clock.UtcNow);
-
-            var connection = new SqliteConnection($"Data Source={paths.DatabasePath}");
+            var connection = new SqliteConnection($"Data Source={paths.DatabasePath};Foreign Keys=True");
             connection.Open();
-            using (var pragma = connection.CreateCommand())
-            {
-                pragma.CommandText = "PRAGMA foreign_keys = ON;";
-                pragma.ExecuteNonQuery();
-            }
 
             var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
                 .UseSqlite(connection, contextOwnsConnection: true)
                 .Options;
             using var dbContext = new VarthexComandaDbContext(options);
+
+            var pendentes = dbContext.Database.GetPendingMigrations().ToList();
+            if (pendentes.Count > 0)
+            {
+                var backupCriado = DatabaseBackupService.BackupIfExists(paths.DatabasePath, paths.BackupsDirectory, clock.UtcNow);
+                if (backupCriado is not null)
+                {
+                    _logger.Information("Backup preventivo criado em {Caminho} antes de aplicar {Quantidade} migração(ões) pendente(s)", backupCriado, pendentes.Count);
+                }
+            }
+
             dbContext.Database.Migrate();
 
-            var integridade = dbContext.Database
+            var linhas = dbContext.Database
                 .SqlQueryRaw<string>("PRAGMA integrity_check")
                 .AsEnumerable()
-                .Single();
-            if (integridade != "ok")
+                .ToList();
+            if (linhas.Count != 1 || linhas[0] != "ok")
             {
-                _logger.Error("PRAGMA integrity_check retornou {Resultado}", integridade);
+                _logger.Error("PRAGMA integrity_check retornou {Linhas}", string.Join("; ", linhas));
                 MessageBox.Show(
                     "O banco de dados do Varthex Comanda está corrompido. Restaure um backup antes de continuar.",
                     "Varthex Comanda",

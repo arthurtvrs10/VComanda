@@ -8,7 +8,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<VarthexCom
     public VarthexComandaDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<VarthexComandaDbContext>()
-            .UseSqlite("Data Source=varthex-comanda.design.db")
+            .UseSqlite("Data Source=varthex-comanda.design.db;Foreign Keys=True")
             .Options;
         return new VarthexComandaDbContext(options);
     }
