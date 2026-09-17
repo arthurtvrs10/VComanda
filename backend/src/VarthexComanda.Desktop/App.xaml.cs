@@ -3,9 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using VarthexComanda.Application.Abstractions;
+using VarthexComanda.Application.Catalogo;
+using VarthexComanda.Desktop.Catalogo;
 using VarthexComanda.Infrastructure.Concurrency;
 using VarthexComanda.Infrastructure.Logging;
 using VarthexComanda.Infrastructure.Persistence;
+using VarthexComanda.Infrastructure.Persistence.Catalogo;
 using VarthexComanda.Infrastructure.Storage;
 using VarthexComanda.Infrastructure.Time;
 
@@ -45,6 +48,17 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IClock, SystemClock>();
         services.AddDbContextFactory<VarthexComandaDbContext>(options =>
             options.UseSqlite($"Data Source={paths.DatabasePath};Foreign Keys=True"));
+        services.AddTransient<ICategoriaRepository, EfCategoriaRepository>();
+        services.AddTransient<IProdutoRepository, EfProdutoRepository>();
+        services.AddTransient<CadastrarCategoria>();
+        services.AddTransient<AlterarCategoria>();
+        services.AddTransient<ListarCategoriasAtivas>();
+        services.AddTransient<CadastrarProduto>();
+        services.AddTransient<AlterarProduto>();
+        services.AddTransient<DesativarProduto>();
+        services.AddTransient<PesquisarProdutos>();
+        services.AddTransient<ProdutosViewModel>();
+        services.AddTransient<MainWindow>();
 
         _serviceProvider = services.BuildServiceProvider();
 
@@ -96,7 +110,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        new MainWindow().Show();
+        _serviceProvider.GetRequiredService<MainWindow>().Show();
     }
 
     protected override void OnExit(ExitEventArgs e)

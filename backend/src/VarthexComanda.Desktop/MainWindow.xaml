@@ -1,12 +1,67 @@
-﻿<Window x:Class="VarthexComanda.Desktop.MainWindow"
+<Window x:Class="VarthexComanda.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VarthexComanda.Desktop"
         mc:Ignorable="d"
-        Title="Varthex Comanda" Height="450" Width="800">
-    <Grid>
+        Title="Varthex Comanda" Height="600" Width="1000">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
 
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Categoria:" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <ComboBox Width="180" ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
+                      SelectedItem="{Binding CategoriaFiltro}" Margin="0,0,12,0" />
+            <TextBlock Text="Buscar:" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox Width="220" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <ListView Grid.Row="1" Grid.Column="0"
+                  ItemsSource="{Binding Produtos}"
+                  SelectedItem="{Binding ProdutoSelecionado}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="260" />
+                    <GridViewColumn Header="Preço (centavos)" DisplayMemberBinding="{Binding PrecoCentavos}" Width="140" />
+                    <GridViewColumn Header="Ativo" DisplayMemberBinding="{Binding Ativo}" Width="80" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
+            <TextBlock Text="Nome do produto" />
+            <TextBox Text="{Binding NomeProduto, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+
+            <TextBlock Text="Categoria" />
+            <ComboBox ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
+                      SelectedItem="{Binding CategoriaProduto}" Margin="0,0,0,8" />
+
+            <TextBlock Text="Preço (R$)" />
+            <TextBox Text="{Binding PrecoProdutoReais, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+
+            <CheckBox Content="Ativo" IsChecked="{Binding ProdutoAtivo}" Margin="0,0,0,8" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Content="Novo" Command="{Binding NovoCommand}" Margin="0,0,8,0" />
+                <Button Content="Salvar" Command="{Binding SalvarCommand}" Margin="0,0,8,0" />
+                <Button Content="Desativar" Command="{Binding DesativarCommand}" />
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8" />
+
+            <TextBlock Text="Nova categoria" />
+            <TextBox Text="{Binding NovaCategoriaNome, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+            <Button Content="Adicionar categoria" Command="{Binding AdicionarCategoriaCommand}" HorizontalAlignment="Left" />
+
+            <TextBlock Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" Margin="0,12,0,0" />
+        </StackPanel>
     </Grid>
 </Window>
