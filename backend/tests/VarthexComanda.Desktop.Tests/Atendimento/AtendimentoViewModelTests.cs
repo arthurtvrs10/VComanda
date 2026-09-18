@@ -1,7 +1,9 @@
 using VarthexComanda.Application.Atendimento;
 using VarthexComanda.Application.Catalogo;
+using VarthexComanda.Application.Configuracao;
 using VarthexComanda.Application.Tests.Atendimento;
 using VarthexComanda.Application.Tests.Catalogo;
+using VarthexComanda.Application.Tests.Configuracao;
 using VarthexComanda.Desktop.Atendimento;
 using Xunit;
 
@@ -21,7 +23,7 @@ public class AtendimentoViewModelTests
         var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
 
         var viewModel = new AtendimentoViewModel(
-            new AbrirComanda(comandas, relogio),
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
             new AdicionarItem(comandas, produtos, relogio),
             new AlterarQuantidade(comandas, relogio),
             new RemoverItem(comandas, relogio),

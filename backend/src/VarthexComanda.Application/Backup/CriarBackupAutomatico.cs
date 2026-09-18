@@ -1,5 +1,6 @@
 using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Application.Atendimento;
+using VarthexComanda.Application.Configuracao;
 
 namespace VarthexComanda.Application.Backup;
 
@@ -8,12 +9,14 @@ public class CriarBackupAutomatico
     private readonly IBackupService _backupService;
     private readonly IBackupRegistroRepository _registros;
     private readonly IClock _relogio;
+    private readonly ObterConfiguracao _obterConfiguracao;
 
-    public CriarBackupAutomatico(IBackupService backupService, IBackupRegistroRepository registros, IClock relogio)
+    public CriarBackupAutomatico(IBackupService backupService, IBackupRegistroRepository registros, IClock relogio, ObterConfiguracao obterConfiguracao)
     {
         _backupService = backupService;
         _registros = registros;
         _relogio = relogio;
+        _obterConfiguracao = obterConfiguracao;
     }
 
     public void Executar(bool incondicional = false)
@@ -32,6 +35,22 @@ public class CriarBackupAutomatico
             }
 
             _backupService.CriarBackupGerenciado();
+
+            if (incondicional)
+            {
+                var configuracao = _obterConfiguracao.Executar();
+                if (!string.IsNullOrEmpty(configuracao.PastaBackupExterna))
+                {
+                    try
+                    {
+                        _backupService.CriarBackupExterno(configuracao.PastaBackupExterna);
+                    }
+                    catch (Exception)
+                    {
+                        // falha na cópia externa automática não deve interromper o encerramento do app
+                    }
+                }
+            }
         }
         catch (Exception)
         {

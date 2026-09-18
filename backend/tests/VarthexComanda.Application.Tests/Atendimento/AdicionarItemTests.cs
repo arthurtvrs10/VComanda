@@ -1,6 +1,8 @@
 using VarthexComanda.Application.Atendimento;
 using VarthexComanda.Application.Catalogo;
+using VarthexComanda.Application.Configuracao;
 using VarthexComanda.Application.Tests.Catalogo;
+using VarthexComanda.Application.Tests.Configuracao;
 using Xunit;
 
 namespace VarthexComanda.Application.Tests.Atendimento;
@@ -10,7 +12,7 @@ public class AdicionarItemTests
     private static (FakeComandaRepository comandas, FakeProdutoRepository produtos, int comandaId, int produtoAtivoId, int produtoInativoId) Preparar()
     {
         var comandas = new FakeComandaRepository();
-        var comanda = new AbrirComanda(comandas, new FakeClock()).Executar(10).Valor!;
+        var comanda = new AbrirComanda(comandas, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository())).Executar(10).Valor!;
 
         var categorias = new FakeCategoriaRepository();
         var categoria = new CadastrarCategoria(categorias, new FakeClock()).Executar("Bebidas").Valor!;

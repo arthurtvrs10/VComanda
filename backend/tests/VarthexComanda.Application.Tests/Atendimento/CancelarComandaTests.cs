@@ -1,5 +1,7 @@
 using VarthexComanda.Application.Atendimento;
+using VarthexComanda.Application.Configuracao;
 using VarthexComanda.Application.Tests.Catalogo;
+using VarthexComanda.Application.Tests.Configuracao;
 using VarthexComanda.Domain;
 using Xunit;
 
@@ -11,7 +13,7 @@ public class CancelarComandaTests
     public void Executar_ComandaAberta_CancelaELiberaNumero()
     {
         var repositorio = new FakeComandaRepository();
-        var abrir = new AbrirComanda(repositorio, new FakeClock());
+        var abrir = new AbrirComanda(repositorio, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
         var comanda = abrir.Executar(10).Valor!;
         var caso = new CancelarComanda(repositorio, new FakeClock());
 
