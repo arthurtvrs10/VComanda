@@ -4,9 +4,9 @@ using VarthexComanda.Domain;
 
 namespace VarthexComanda.Infrastructure.Persistence.Configurations;
 
-public class ConfiguracaoConfiguration : IEntityTypeConfiguration<Configuracao>
+public class ConfiguracaoConfiguration : IEntityTypeConfiguration<VarthexComanda.Domain.Configuracao>
 {
-    public void Configure(EntityTypeBuilder<Configuracao> builder)
+    public void Configure(EntityTypeBuilder<VarthexComanda.Domain.Configuracao> builder)
     {
         builder.ToTable("configuracao");
         builder.HasKey(c => c.Chave);

@@ -15,7 +15,7 @@ public class VarthexComandaDbContext : DbContext
     public DbSet<Comanda> Comandas => Set<Comanda>();
     public DbSet<ItemComanda> ItensComanda => Set<ItemComanda>();
     public DbSet<Venda> Vendas => Set<Venda>();
-    public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
+    public DbSet<VarthexComanda.Domain.Configuracao> Configuracoes => Set<VarthexComanda.Domain.Configuracao>();
     public DbSet<BackupRegistro> BackupRegistros => Set<BackupRegistro>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
