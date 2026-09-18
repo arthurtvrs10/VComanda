@@ -163,11 +163,7 @@ public partial class AtendimentoViewModel : ObservableObject
         if (_encerramentoDialog.Abrir(comandaId))
         {
             FecharEdicao();
-            var comandaFechada = ComandasAbertas.FirstOrDefault(c => c.Id == comandaId);
-            if (comandaFechada is not null)
-            {
-                ComandasAbertas.Remove(comandaFechada);
-            }
+            AtualizarComandasAbertas();
         }
     }
 

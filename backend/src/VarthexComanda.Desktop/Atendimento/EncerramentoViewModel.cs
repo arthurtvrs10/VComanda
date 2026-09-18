@@ -38,6 +38,9 @@ public partial class EncerramentoViewModel : ObservableObject
 
     public void Carregar(int comandaId)
     {
+        CobrancaAprovada = false;
+        Mensagem = string.Empty;
+
         _comandaId = comandaId;
         var detalhe = _comandas.BuscarComItens(comandaId);
         if (detalhe is null)

@@ -73,6 +73,23 @@ public class EncerramentoViewModelTests
     }
 
     [Fact]
+    public void Carregar_SegundaVez_ResetaCobrancaAprovadaEMensagem()
+    {
+        var (viewModel, comandas, _) = CriarViewModel();
+        viewModel.CobrancaAprovada = true;
+
+        var relogio = new FakeClock();
+        var produto = new Produto { Id = 2, CategoriaId = 1, Nome = "Água", PrecoCentavos = 300, Ativo = true, CriadoEm = relogio.UtcNow, AtualizadoEm = relogio.UtcNow };
+        var outraComanda = comandas.AbrirComanda(20, relogio.UtcNow);
+        comandas.AdicionarItem(outraComanda.Id, produto, 1, relogio.UtcNow);
+
+        viewModel.Carregar(outraComanda.Id);
+
+        Assert.False(viewModel.CobrancaAprovada);
+        Assert.Equal(string.Empty, viewModel.Mensagem);
+    }
+
+    [Fact]
     public void Voltar_DisparaConcluidoFalseSemAlterarComanda()
     {
         var (viewModel, comandas, comandaId) = CriarViewModel();

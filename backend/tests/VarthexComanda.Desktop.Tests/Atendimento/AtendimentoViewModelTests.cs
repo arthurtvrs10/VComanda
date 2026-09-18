@@ -18,7 +18,7 @@ public class AtendimentoViewModelTests
         new CadastrarProduto(produtos, categorias, relogio).Executar("Refrigerante", categoria.Id, 500);
         var comandas = new FakeComandaRepository();
         var confirmador = new FakeConfirmador { ProximaResposta = confirmar };
-        var encerramentoDialog = new FakeEncerramentoDialog();
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
 
         var viewModel = new AtendimentoViewModel(
             new AbrirComanda(comandas, relogio),
