@@ -1,0 +1,149 @@
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using VarthexComanda.Application.Backup;
+using VarthexComanda.Domain;
+using VarthexComanda.Infrastructure.Backup;
+using VarthexComanda.Infrastructure.Persistence;
+using VarthexComanda.Infrastructure.Storage;
+using VarthexComanda.Infrastructure.Time;
+using Xunit;
+
+namespace VarthexComanda.Infrastructure.Tests.Backup;
+
+public class EfBackupServiceTests : IDisposable
+{
+    private readonly string _raizTeste;
+    private readonly AppPaths _paths;
+    private readonly ServiceProvider _provedor;
+    private readonly IDbContextFactory<VarthexComandaDbContext> _fabrica;
+    private readonly FakeBackupRegistroRepositoryDeIntegracao _registros;
+
+    public EfBackupServiceTests()
+    {
+        _raizTeste = Path.Combine(Path.GetTempPath(), $"varthex-backupservice-tests-{Guid.NewGuid()}");
+        _paths = new AppPaths(_raizTeste);
+        _paths.EnsureCreated();
+
+        var servicos = new ServiceCollection();
+        servicos.AddDbContextFactory<VarthexComandaDbContext>(options =>
+            options.UseSqlite($"Data Source={_paths.DatabasePath};Foreign Keys=True"));
+        _provedor = servicos.BuildServiceProvider();
+        _fabrica = _provedor.GetRequiredService<IDbContextFactory<VarthexComandaDbContext>>();
+
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            contexto.Database.Migrate();
+        }
+
+        _registros = new FakeBackupRegistroRepositoryDeIntegracao();
+    }
+
+    public void Dispose()
+    {
+        _provedor.Dispose();
+        SqliteConnection.ClearAllPools();
+        if (Directory.Exists(_raizTeste)) Directory.Delete(_raizTeste, recursive: true);
+    }
+
+    [Fact]
+    public void CriarBackupGerenciado_CriaArquivoDbEChecksumECompanheiro()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+
+        var resultado = servico.CriarBackupGerenciado();
+
+        Assert.True(resultado.Sucesso);
+        var caminhoDb = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+        Assert.True(File.Exists(caminhoDb));
+        Assert.True(File.Exists(caminhoDb + ".sha256"));
+        Assert.Equal(resultado.Valor.Checksum, File.ReadAllText(caminhoDb + ".sha256").Trim());
+    }
+
+    [Fact]
+    public void CriarBackupGerenciado_RegistraSucessoNoRepositorio()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+
+        servico.CriarBackupGerenciado();
+
+        var registro = Assert.Single(_registros.ListarRecentes(10));
+        Assert.Equal(StatusBackup.Sucesso, registro.Status);
+        Assert.NotNull(registro.Checksum);
+    }
+
+    [Fact]
+    public void CriarBackupGerenciado_BackupPassaNaVerificacaoDeIntegridade()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+
+        var resultado = servico.CriarBackupGerenciado();
+
+        var caminhoDb = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+        using var conexao = new SqliteConnection($"Data Source={caminhoDb}");
+        conexao.Open();
+        using var comando = conexao.CreateCommand();
+        comando.CommandText = "PRAGMA integrity_check";
+        Assert.Equal("ok", (string?)comando.ExecuteScalar());
+    }
+
+    [Fact]
+    public void CriarBackupGerenciado_MaisDeTresBackups_RetencaoMantemSomenteOsTresMaisRecentes()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio, retencaoMaxima: 3);
+
+        for (var i = 0; i < 5; i++)
+        {
+            relogio.UtcNow = relogio.UtcNow.AddSeconds(1);
+            servico.CriarBackupGerenciado();
+        }
+
+        var arquivos = Directory.GetFiles(_paths.BackupsDirectory, "varthex-comanda-*.db");
+        Assert.Equal(3, arquivos.Length);
+    }
+
+    [Fact]
+    public void CriarBackupExterno_NaoAplicaRetencaoNaPastaExterna()
+    {
+        var pastaExterna = Path.Combine(_raizTeste, "externa");
+        Directory.CreateDirectory(pastaExterna);
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio, retencaoMaxima: 3);
+
+        for (var i = 0; i < 5; i++)
+        {
+            relogio.UtcNow = relogio.UtcNow.AddSeconds(1);
+            servico.CriarBackupExterno(pastaExterna);
+        }
+
+        var arquivos = Directory.GetFiles(pastaExterna, "varthex-comanda-*.db");
+        Assert.Equal(5, arquivos.Length);
+    }
+
+    private class FakeClockDeIntegracao : VarthexComanda.Application.Abstractions.IClock
+    {
+        public DateTime UtcNow { get; set; } = new DateTime(2026, 9, 18, 12, 0, 0, DateTimeKind.Utc);
+    }
+
+    private class FakeBackupRegistroRepositoryDeIntegracao : IBackupRegistroRepository
+    {
+        private readonly List<BackupRegistro> _registros = new();
+        private int _proximoId = 1;
+
+        public void Registrar(BackupRegistro registro)
+        {
+            registro.Id = _proximoId++;
+            _registros.Add(registro);
+        }
+
+        public IReadOnlyList<BackupRegistro> ListarRecentes(int quantidade) =>
+            _registros.OrderByDescending(r => r.CriadoEm).Take(quantidade).ToList();
+
+        public bool ExisteBackupHoje(DateTime inicioUtc, DateTime fimUtc) =>
+            _registros.Any(r => r.Status == StatusBackup.Sucesso && r.CriadoEm >= inicioUtc && r.CriadoEm < fimUtc);
+    }
+}
