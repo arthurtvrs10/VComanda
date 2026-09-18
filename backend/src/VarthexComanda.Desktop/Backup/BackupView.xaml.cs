@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -47,12 +46,6 @@ public partial class BackupView : UserControl
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 
-        var caminhoExecutavel = Environment.ProcessPath;
-        if (caminhoExecutavel is not null)
-        {
-            Process.Start(caminhoExecutavel);
-        }
-
-        Environment.Exit(0);
+        ((App)System.Windows.Application.Current).ReiniciarAplicativo();
     }
 }

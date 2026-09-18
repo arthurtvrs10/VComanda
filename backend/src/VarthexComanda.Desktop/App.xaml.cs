@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -172,5 +173,21 @@ public partial class App : System.Windows.Application
         (_logger as IDisposable)?.Dispose();
         _guard?.Dispose();
         base.OnExit(e);
+    }
+
+    public void ReiniciarAplicativo()
+    {
+        _guard?.Release();
+        _guard?.Dispose();
+        _serviceProvider?.Dispose();
+        (_logger as IDisposable)?.Dispose();
+
+        var caminhoExecutavel = Environment.ProcessPath;
+        if (caminhoExecutavel is not null)
+        {
+            Process.Start(caminhoExecutavel);
+        }
+
+        Environment.Exit(0);
     }
 }
