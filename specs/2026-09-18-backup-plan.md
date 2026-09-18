@@ -1928,8 +1928,15 @@ public class UtcParaDataHoraLocalConverter : IValueConverter
 
 - [ ] **Step 2: Adicionar restauração por arquivo externo a `BackupViewModel.cs` (modifica a Task 5)**
 
-Em `backend/src/VarthexComanda.Desktop/Backup/BackupViewModel.cs`, substituir o
-método `Restaurar()` inteiro (da Task 5) por:
+Em `backend/src/VarthexComanda.Desktop/Backup/BackupViewModel.cs`, o arquivo
+da Task 5 termina com dois métodos consecutivos, nesta ordem:
+`private void Restaurar() { ... }` seguido de
+`private bool PodeRestaurar() => BackupSelecionado is not null;`. Substituir
+esses **dois métodos juntos** (do `[RelayCommand(CanExecute = ...)]` que
+antecede `Restaurar()` até o `;` final de `PodeRestaurar()`, inclusive) pelo
+bloco de 4 métodos abaixo — ele já inclui uma nova versão de `PodeRestaurar()`
+ao final; não deixar duas definições desse método no arquivo (isso não
+compilaria, "membro duplicado"):
 
 ```csharp
     [RelayCommand(CanExecute = nameof(PodeRestaurar))]
@@ -1979,10 +1986,6 @@ método `Restaurar()` inteiro (da Task 5) por:
 
     private bool PodeRestaurar() => BackupSelecionado is not null;
 ```
-
-(O método `PodeRestaurar()` já existia na Task 5 — só está repetido aqui
-porque o bloco substituído termina nele; não duplicar o método, só garantir
-que o arquivo final tenha exatamente um `PodeRestaurar()`.)
 
 - [ ] **Step 3: Criar `BackupView.xaml`**
 
