@@ -9,7 +9,7 @@ namespace VarthexComanda.Desktop.Tests.Atendimento;
 
 public class AtendimentoViewModelTests
 {
-    private static (AtendimentoViewModel viewModel, FakeProdutoRepository produtos, FakeConfirmador confirmador) CriarViewModel(bool confirmar = true)
+    private static (AtendimentoViewModel viewModel, FakeProdutoRepository produtos, FakeConfirmador confirmador, FakeEncerramentoDialog encerramentoDialog) CriarViewModel(bool confirmar = true)
     {
         var categorias = new FakeCategoriaRepository();
         var relogio = new FakeClock();
@@ -18,6 +18,7 @@ public class AtendimentoViewModelTests
         new CadastrarProduto(produtos, categorias, relogio).Executar("Refrigerante", categoria.Id, 500);
         var comandas = new FakeComandaRepository();
         var confirmador = new FakeConfirmador { ProximaResposta = confirmar };
+        var encerramentoDialog = new FakeEncerramentoDialog();
 
         var viewModel = new AtendimentoViewModel(
             new AbrirComanda(comandas, relogio),
@@ -28,15 +29,16 @@ public class AtendimentoViewModelTests
             comandas,
             new ListarCategoriasAtivas(categorias),
             new PesquisarProdutos(produtos),
-            confirmador);
+            confirmador,
+            encerramentoDialog);
 
-        return (viewModel, produtos, confirmador);
+        return (viewModel, produtos, confirmador, encerramentoDialog);
     }
 
     [Fact]
     public void Abrir_NumeroValido_CriaComandaEMostraNaGrade()
     {
-        var (viewModel, _, _) = CriarViewModel();
+        var (viewModel, _, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
 
         viewModel.AbrirCommand.Execute(null);
@@ -49,7 +51,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void Abrir_MesmoNumeroDuasVezes_SegundaFalhaSemDuplicarNaGrade()
     {
-        var (viewModel, _, _) = CriarViewModel();
+        var (viewModel, _, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
 
@@ -63,7 +65,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void AdicionarProdutoDuasVezes_IncrementaQuantidadeEmVezDeDuplicar()
     {
-        var (viewModel, produtos, _) = CriarViewModel();
+        var (viewModel, produtos, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -79,7 +81,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void DiminuirQuantidadeAteZero_ConfirmadorAceita_RemoveItem()
     {
-        var (viewModel, produtos, confirmador) = CriarViewModel();
+        var (viewModel, produtos, confirmador, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -95,7 +97,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void DiminuirQuantidadeAteZero_ConfirmadorRecusa_ItemPermanece()
     {
-        var (viewModel, produtos, confirmador) = CriarViewModel();
+        var (viewModel, produtos, confirmador, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -112,7 +114,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void Remover_ConfirmadorRecusa_ItemPermanece()
     {
-        var (viewModel, produtos, confirmador) = CriarViewModel();
+        var (viewModel, produtos, confirmador, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -127,7 +129,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void CancelarComandaAtual_LiberaNumeroNaGrade()
     {
-        var (viewModel, _, _) = CriarViewModel();
+        var (viewModel, _, _, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
 
@@ -140,7 +142,7 @@ public class AtendimentoViewModelTests
     [Fact]
     public void CancelarComandaAtual_ConfirmadorRecusa_ComandaPermaneceAberta()
     {
-        var (viewModel, produtos, confirmador) = CriarViewModel();
+        var (viewModel, produtos, confirmador, _) = CriarViewModel();
         viewModel.NovoNumero = "10";
         viewModel.AbrirCommand.Execute(null);
         var produto = produtos.Pesquisar(null, null)[0];
@@ -148,6 +150,50 @@ public class AtendimentoViewModelTests
 
         confirmador.ProximaResposta = false;
         viewModel.CancelarComandaAtualCommand.Execute(null);
+
+        Assert.NotNull(viewModel.ComandaAtual);
+        Assert.Single(viewModel.ComandasAbertas);
+    }
+
+    [Fact]
+    public void VerTotal_ComandaSemItens_ComandoDesabilitado()
+    {
+        var (viewModel, _, _, _) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+
+        Assert.False(viewModel.VerTotalCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void VerTotal_DialogoConfirma_ComandaSaiDaGrade()
+    {
+        var (viewModel, produtos, _, encerramentoDialog) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+        var comandaId = viewModel.ComandaAtual!.Id;
+        encerramentoDialog.ProximaResposta = true;
+
+        viewModel.VerTotalCommand.Execute(null);
+
+        Assert.Equal(comandaId, encerramentoDialog.ComandaIdRecebida);
+        Assert.Null(viewModel.ComandaAtual);
+        Assert.Empty(viewModel.ComandasAbertas);
+    }
+
+    [Fact]
+    public void VerTotal_DialogoCancela_ComandaPermaneceAberta()
+    {
+        var (viewModel, produtos, _, encerramentoDialog) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+        encerramentoDialog.ProximaResposta = false;
+
+        viewModel.VerTotalCommand.Execute(null);
 
         Assert.NotNull(viewModel.ComandaAtual);
         Assert.Single(viewModel.ComandasAbertas);

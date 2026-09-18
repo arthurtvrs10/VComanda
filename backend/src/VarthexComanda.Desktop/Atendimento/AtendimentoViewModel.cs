@@ -18,6 +18,7 @@ public partial class AtendimentoViewModel : ObservableObject
     private readonly ListarCategoriasAtivas _listarCategoriasAtivas;
     private readonly PesquisarProdutos _pesquisarProdutos;
     private readonly IConfirmador _confirmador;
+    private readonly IEncerramentoDialog _encerramentoDialog;
 
     public AtendimentoViewModel(
         AbrirComanda abrirComanda,
@@ -28,7 +29,8 @@ public partial class AtendimentoViewModel : ObservableObject
         IComandaRepository comandas,
         ListarCategoriasAtivas listarCategoriasAtivas,
         PesquisarProdutos pesquisarProdutos,
-        IConfirmador confirmador)
+        IConfirmador confirmador,
+        IEncerramentoDialog encerramentoDialog)
     {
         _abrirComanda = abrirComanda;
         _adicionarItem = adicionarItem;
@@ -39,6 +41,7 @@ public partial class AtendimentoViewModel : ObservableObject
         _listarCategoriasAtivas = listarCategoriasAtivas;
         _pesquisarProdutos = pesquisarProdutos;
         _confirmador = confirmador;
+        _encerramentoDialog = encerramentoDialog;
 
         ComandasAbertas = new ObservableCollection<Comanda>();
         Categorias = new ObservableCollection<Categoria>();
@@ -137,6 +140,7 @@ public partial class AtendimentoViewModel : ObservableObject
         {
             Itens.Add(item);
         }
+        VerTotalCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -144,7 +148,30 @@ public partial class AtendimentoViewModel : ObservableObject
     {
         ComandaAtual = null;
         Itens.Clear();
+        VerTotalCommand.NotifyCanExecuteChanged();
     }
+
+    [RelayCommand(CanExecute = nameof(PodeVerTotal))]
+    private void VerTotal()
+    {
+        if (ComandaAtual is null)
+        {
+            return;
+        }
+
+        var comandaId = ComandaAtual.Id;
+        if (_encerramentoDialog.Abrir(comandaId))
+        {
+            FecharEdicao();
+            var comandaFechada = ComandasAbertas.FirstOrDefault(c => c.Id == comandaId);
+            if (comandaFechada is not null)
+            {
+                ComandasAbertas.Remove(comandaFechada);
+            }
+        }
+    }
+
+    private bool PodeVerTotal() => ComandaAtual is not null && Itens.Count > 0;
 
     [RelayCommand]
     private void AdicionarProdutoAoItem(Produto produto)
@@ -275,6 +302,7 @@ public partial class AtendimentoViewModel : ObservableObject
             Itens.Add(item);
         }
         AtualizarComandasAbertas();
+        VerTotalCommand.NotifyCanExecuteChanged();
     }
 
     private void AtualizarComandasAbertas()
