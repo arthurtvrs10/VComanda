@@ -287,6 +287,28 @@ public class EfBackupServiceTests : IDisposable
         }
     }
 
+    [Fact]
+    public void RestaurarPara_ArquivoInexistente_NaoAlteraABaseAtiva()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            contexto.Categorias.Add(new Categoria { Id = 0, Nome = "Preservada", Ativo = true, CriadoEm = relogio.UtcNow, AtualizadoEm = relogio.UtcNow });
+            contexto.SaveChanges();
+        }
+        var caminhoInexistente = Path.Combine(_raizTeste, "nao-existe.db");
+
+        var resultado = servico.RestaurarPara(caminhoInexistente);
+
+        Assert.False(resultado.Sucesso);
+        SqliteConnection.ClearAllPools();
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            Assert.Contains("Preservada", contexto.Categorias.Select(c => c.Nome).ToList());
+        }
+    }
+
     private class FakeClockDeIntegracao : VarthexComanda.Application.Abstractions.IClock
     {
         public DateTime UtcNow { get; set; } = new DateTime(2026, 9, 18, 12, 0, 0, DateTimeKind.Utc);

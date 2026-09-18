@@ -277,6 +277,11 @@ public class EfBackupService : IBackupService
 
     public Resultado<BackupRegistro> RestaurarPara(string caminhoArquivo)
     {
+        if (!File.Exists(caminhoArquivo))
+        {
+            return Resultado<BackupRegistro>.Falha("Arquivo de backup não encontrado.");
+        }
+
         try
         {
             var preventivo = CriarBackupGerenciado();
