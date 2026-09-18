@@ -271,7 +271,9 @@ public class EfBackupService : IBackupService
             VersaoCompativel = true,
             IntegridadeOk = true,
             ChecksumConfere = checksumConfere,
-            Motivo = string.Empty
+            Motivo = checksumConfere == false
+                ? "O checksum do arquivo não confere — o backup pode estar corrompido ou adulterado."
+                : string.Empty
         };
     }
 

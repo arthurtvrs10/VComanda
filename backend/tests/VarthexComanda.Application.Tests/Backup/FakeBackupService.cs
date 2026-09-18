@@ -11,6 +11,7 @@ public class FakeBackupService : IBackupService
     public int ChamadasRestaurarPara { get; private set; }
     public bool LancarExcecaoAoCriar { get; set; }
     public bool ProximaCriacaoFalha { get; set; }
+    public bool ProximaCriacaoExternaFalha { get; set; }
     public RelatorioValidacao ProximoRelatorio { get; set; } = new()
     {
         FormatoValido = true,
@@ -36,7 +37,7 @@ public class FakeBackupService : IBackupService
     public Resultado<BackupRegistro> CriarBackupExterno(string pastaExterna)
     {
         ChamadasCriarBackupExterno++;
-        return ProximaCriacaoFalha
+        return ProximaCriacaoFalha || ProximaCriacaoExternaFalha
             ? Resultado<BackupRegistro>.Falha("Falha simulada ao criar backup externo.")
             : Resultado<BackupRegistro>.Ok(NovoRegistro(pastaExterna));
     }

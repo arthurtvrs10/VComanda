@@ -8,5 +8,5 @@ public class RelatorioValidacao
     public bool? ChecksumConfere { get; init; }
     public required string Motivo { get; init; }
 
-    public bool Aprovado => FormatoValido && VersaoCompativel && IntegridadeOk;
+    public bool Aprovado => FormatoValido && VersaoCompativel && IntegridadeOk && ChecksumConfere != false;
 }

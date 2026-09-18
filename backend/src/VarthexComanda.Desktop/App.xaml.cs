@@ -26,6 +26,7 @@ public partial class App : System.Windows.Application
     private SingleInstanceGuard? _guard;
     private ILogger? _logger;
     private ServiceProvider? _serviceProvider;
+    private bool _startupConcluido;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -151,6 +152,7 @@ public partial class App : System.Windows.Application
             _serviceProvider.GetRequiredService<CriarBackupAutomatico>().Executar();
 
             _serviceProvider.GetRequiredService<MainWindow>().Show();
+            _startupConcluido = true;
         }
         catch (Exception ex)
         {
@@ -167,7 +169,10 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _serviceProvider?.GetRequiredService<CriarBackupAutomatico>().Executar(incondicional: true);
+        if (_startupConcluido)
+        {
+            _serviceProvider?.GetRequiredService<CriarBackupAutomatico>().Executar(incondicional: true);
+        }
         _logger?.Information("Encerrando Varthex Comanda");
         _serviceProvider?.Dispose();
         (_logger as IDisposable)?.Dispose();
@@ -182,10 +187,19 @@ public partial class App : System.Windows.Application
         _serviceProvider?.Dispose();
         (_logger as IDisposable)?.Dispose();
 
-        var caminhoExecutavel = Environment.ProcessPath;
-        if (caminhoExecutavel is not null)
+        try
         {
+            var caminhoExecutavel = Environment.ProcessPath
+                ?? throw new InvalidOperationException("Não foi possível determinar o caminho do executável.");
             Process.Start(caminhoExecutavel);
+        }
+        catch (Exception)
+        {
+            MessageBox.Show(
+                "A restauração foi concluída, mas não foi possível reiniciar automaticamente. Feche e abra o Varthex Comanda manualmente.",
+                "Varthex Comanda",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
 
         Environment.Exit(0);

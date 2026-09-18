@@ -58,7 +58,7 @@ public partial class BackupViewModel : ObservableObject
         {
             var resultado = _criarBackupManual.Executar(pastaExterna);
             Mensagem = resultado.Sucesso
-                ? "Backup criado com sucesso."
+                ? (string.IsNullOrEmpty(resultado.Valor?.Mensagem) ? "Backup criado com sucesso." : resultado.Valor!.Mensagem!)
                 : string.Join(" ", resultado.Erros);
             AtualizarLista();
         }

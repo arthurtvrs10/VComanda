@@ -41,4 +41,17 @@ public class CriarBackupManualTests
         Assert.False(resultado.Sucesso);
         Assert.Equal(0, backupService.ChamadasCriarBackupExterno);
     }
+
+    [Fact]
+    public void Executar_ExternaFalha_GerenciadaContinuaComSucessoMasMensagemAvisaDaFalhaExterna()
+    {
+        var backupService = new FakeBackupService { ProximaCriacaoExternaFalha = true };
+        var caso = new CriarBackupManual(backupService);
+
+        var resultado = caso.Executar("D:\\pendrive");
+
+        Assert.True(resultado.Sucesso);
+        Assert.False(string.IsNullOrEmpty(resultado.Valor!.Mensagem));
+        Assert.Contains("externa", resultado.Valor.Mensagem, StringComparison.OrdinalIgnoreCase);
+    }
 }

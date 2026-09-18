@@ -233,6 +233,22 @@ public class EfBackupServiceTests : IDisposable
     }
 
     [Fact]
+    public void Validar_ChecksumSha256Adulterado_FalhaNoChecksumMesmoComDbValido()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var resultado = servico.CriarBackupGerenciado();
+        var caminho = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+        File.WriteAllText(caminho + ".sha256", "0000000000000000000000000000000000000000000000000000000000000000");
+
+        var relatorio = servico.Validar(caminho);
+
+        Assert.False(relatorio.ChecksumConfere);
+        Assert.False(relatorio.Aprovado);
+        Assert.NotEmpty(relatorio.Motivo);
+    }
+
+    [Fact]
     public void RestaurarPara_ArquivoValido_CriaCopiaPreventivaETrocaABaseAtiva()
     {
         var relogio = new FakeClockDeIntegracao();
