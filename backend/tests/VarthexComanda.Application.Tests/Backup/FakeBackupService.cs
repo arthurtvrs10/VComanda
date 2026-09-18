@@ -8,6 +8,7 @@ public class FakeBackupService : IBackupService
 {
     public int ChamadasCriarBackupGerenciado { get; private set; }
     public int ChamadasCriarBackupExterno { get; private set; }
+    public int ChamadasRestaurarPara { get; private set; }
     public bool LancarExcecaoAoCriar { get; set; }
     public bool ProximaCriacaoFalha { get; set; }
     public RelatorioValidacao ProximoRelatorio { get; set; } = new()
@@ -42,10 +43,13 @@ public class FakeBackupService : IBackupService
 
     public RelatorioValidacao Validar(string caminhoArquivo) => ProximoRelatorio;
 
-    public Resultado<BackupRegistro> RestaurarPara(string caminhoArquivo) =>
-        ProximaRestauracaoFalha
+    public Resultado<BackupRegistro> RestaurarPara(string caminhoArquivo)
+    {
+        ChamadasRestaurarPara++;
+        return ProximaRestauracaoFalha
             ? Resultado<BackupRegistro>.Falha("Falha simulada ao restaurar.")
             : Resultado<BackupRegistro>.Ok(NovoRegistro("C:\\backups"));
+    }
 
     private static BackupRegistro NovoRegistro(string destino) => new()
     {

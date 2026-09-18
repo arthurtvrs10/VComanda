@@ -84,13 +84,13 @@ public class BackupViewModelTests
 
         viewModel.RestaurarCommand.Execute(null);
 
-        Assert.False(backupService.ProximaRestauracaoFalha); // nada mudou; nenhuma chamada de restauração foi feita
+        Assert.Equal(0, backupService.ChamadasRestaurarPara); // nenhuma chamada de restauração foi feita
     }
 
     [Fact]
     public void Restaurar_ConfirmadorAceitaESucesso_DisparaSolicitouReinicio()
     {
-        var (viewModel, _, _) = CriarViewModel(confirmar: true);
+        var (viewModel, backupService, _) = CriarViewModel(confirmar: true);
         viewModel.BackupSelecionado = viewModel.Backups[0];
         var reinicioSolicitado = false;
         viewModel.SolicitouReinicio += (_, _) => reinicioSolicitado = true;
@@ -98,6 +98,7 @@ public class BackupViewModelTests
         viewModel.RestaurarCommand.Execute(null);
 
         Assert.True(reinicioSolicitado);
+        Assert.Equal(1, backupService.ChamadasRestaurarPara);
     }
 
     [Fact]
@@ -128,5 +129,6 @@ public class BackupViewModelTests
 
         Assert.False(reinicioSolicitado);
         Assert.Contains("Falha simulada", viewModel.Mensagem);
+        Assert.Equal(1, backupService.ChamadasRestaurarPara);
     }
 }
