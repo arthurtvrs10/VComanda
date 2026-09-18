@@ -23,8 +23,10 @@ public class SalvarConfiguracaoTests
         Assert.Contains("Informe o nome do estabelecimento.", resultado.Erros);
     }
 
-    [Fact]
-    public void Executar_QuantidadeZeroOuNegativa_Falha()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void Executar_QuantidadeZeroOuNegativa_Falha(int quantidade)
     {
         var repositorio = new FakeConfiguracaoRepository();
         var caso = new SalvarConfiguracao(repositorio, new FakeClock());
@@ -32,7 +34,7 @@ public class SalvarConfiguracaoTests
         var resultado = caso.Executar(new ConfiguracaoEstabelecimento
         {
             NomeEstabelecimento = "Lanchonete",
-            QuantidadeMaximaComandas = 0,
+            QuantidadeMaximaComandas = quantidade,
             PastaBackupExterna = null
         });
 

@@ -1,6 +1,6 @@
 # Histórico de alterações
 
-## 1.10 — Configurações do estabelecimento (RF25)
+## 1.10 - 2026-09-18 - Configurações do estabelecimento (RF25)
 
 - Nova tela "Configurações": nome do estabelecimento, quantidade máxima de
   comandas e pasta de backup externa padrão, persistidos na tabela

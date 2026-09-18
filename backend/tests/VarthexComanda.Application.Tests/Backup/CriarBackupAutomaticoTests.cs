@@ -1,3 +1,6 @@
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using VarthexComanda.Application.Backup;
 using VarthexComanda.Application.Configuracao;
 using VarthexComanda.Application.Tests.Catalogo;
@@ -8,12 +11,20 @@ namespace VarthexComanda.Application.Tests.Backup;
 
 public class CriarBackupAutomaticoTests
 {
+    private static readonly ILogger LoggerSemDestino = new LoggerConfiguration().CreateLogger();
+
+    private sealed class LoggerDeCaptura : ILogEventSink
+    {
+        public List<LogEvent> Eventos { get; } = new();
+        public void Emit(LogEvent logEvent) => Eventos.Add(logEvent);
+    }
+
     [Fact]
     public void Executar_JaExisteBackupHoje_NaoCriaNovoBackup()
     {
         var registros = new FakeBackupRegistroRepository { ExisteBackupHojeRetorno = true };
         var backupService = new FakeBackupService();
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()), LoggerSemDestino);
 
         caso.Executar();
 
@@ -25,7 +36,7 @@ public class CriarBackupAutomaticoTests
     {
         var registros = new FakeBackupRegistroRepository { ExisteBackupHojeRetorno = false };
         var backupService = new FakeBackupService();
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()), LoggerSemDestino);
 
         caso.Executar();
 
@@ -37,7 +48,7 @@ public class CriarBackupAutomaticoTests
     {
         var registros = new FakeBackupRegistroRepository { ExisteBackupHojeRetorno = true };
         var backupService = new FakeBackupService();
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()), LoggerSemDestino);
 
         caso.Executar(incondicional: true);
 
@@ -49,7 +60,7 @@ public class CriarBackupAutomaticoTests
     {
         var registros = new FakeBackupRegistroRepository { ExisteBackupHojeRetorno = false };
         var backupService = new FakeBackupService { LancarExcecaoAoCriar = true };
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()), LoggerSemDestino);
 
         var excecao = Record.Exception(() => caso.Executar());
 
@@ -63,7 +74,7 @@ public class CriarBackupAutomaticoTests
         var backupService = new FakeBackupService();
         var configuracoes = new FakeConfiguracaoRepository();
         configuracoes.Definir("backup.pasta_externa", "D:\\backups", DateTime.UtcNow);
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(configuracoes));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(configuracoes), LoggerSemDestino);
 
         caso.Executar(incondicional: true);
 
@@ -75,7 +86,7 @@ public class CriarBackupAutomaticoTests
     {
         var registros = new FakeBackupRegistroRepository();
         var backupService = new FakeBackupService();
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(new FakeConfiguracaoRepository()), LoggerSemDestino);
 
         caso.Executar(incondicional: true);
 
@@ -89,10 +100,29 @@ public class CriarBackupAutomaticoTests
         var backupService = new FakeBackupService();
         var configuracoes = new FakeConfiguracaoRepository();
         configuracoes.Definir("backup.pasta_externa", "D:\\backups", DateTime.UtcNow);
-        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(configuracoes));
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(configuracoes), LoggerSemDestino);
 
         caso.Executar();
 
         Assert.Equal(0, backupService.ChamadasCriarBackupExterno);
+    }
+
+    [Fact]
+    public void Executar_IncondicionalComFalhaNaCopiaExterna_RegistraAvisoNoLog()
+    {
+        var registros = new FakeBackupRegistroRepository();
+        var backupService = new FakeBackupService { ProximaCriacaoExternaFalha = true };
+        var configuracoes = new FakeConfiguracaoRepository();
+        configuracoes.Definir("backup.pasta_externa", "D:\\backups", DateTime.UtcNow);
+        var captura = new LoggerDeCaptura();
+        var logger = new LoggerConfiguration().WriteTo.Sink(captura).CreateLogger();
+        var caso = new CriarBackupAutomatico(backupService, registros, new FakeClock(), new ObterConfiguracao(configuracoes), logger);
+
+        caso.Executar(incondicional: true);
+
+        var evento = Assert.Single(captura.Eventos);
+        Assert.Equal(LogEventLevel.Warning, evento.Level);
+        Assert.Contains("D:\\backups", evento.RenderMessage());
+        Assert.Contains("Falha simulada ao criar backup externo.", evento.RenderMessage());
     }
 }

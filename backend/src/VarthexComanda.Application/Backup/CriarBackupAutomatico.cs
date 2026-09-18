@@ -1,3 +1,4 @@
+using Serilog;
 using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Application.Atendimento;
 using VarthexComanda.Application.Configuracao;
@@ -10,13 +11,15 @@ public class CriarBackupAutomatico
     private readonly IBackupRegistroRepository _registros;
     private readonly IClock _relogio;
     private readonly ObterConfiguracao _obterConfiguracao;
+    private readonly ILogger _logger;
 
-    public CriarBackupAutomatico(IBackupService backupService, IBackupRegistroRepository registros, IClock relogio, ObterConfiguracao obterConfiguracao)
+    public CriarBackupAutomatico(IBackupService backupService, IBackupRegistroRepository registros, IClock relogio, ObterConfiguracao obterConfiguracao, ILogger logger)
     {
         _backupService = backupService;
         _registros = registros;
         _relogio = relogio;
         _obterConfiguracao = obterConfiguracao;
+        _logger = logger;
     }
 
     public void Executar(bool incondicional = false)
@@ -41,13 +44,11 @@ public class CriarBackupAutomatico
                 var configuracao = _obterConfiguracao.Executar();
                 if (!string.IsNullOrEmpty(configuracao.PastaBackupExterna))
                 {
-                    try
+                    var resultadoExterno = _backupService.CriarBackupExterno(configuracao.PastaBackupExterna);
+                    if (!resultadoExterno.Sucesso)
                     {
-                        _backupService.CriarBackupExterno(configuracao.PastaBackupExterna);
-                    }
-                    catch (Exception)
-                    {
-                        // falha na cópia externa automática não deve interromper o encerramento do app
+                        _logger.Warning("Cópia externa automática falhou em {Pasta}: {Mensagem}",
+                            configuracao.PastaBackupExterna, string.Join(" ", resultadoExterno.Erros));
                     }
                 }
             }
