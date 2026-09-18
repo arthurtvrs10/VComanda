@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 1.7 - 2026-09-18
+
+- encerramento e venda (Etapa 4, RF14-17): tela de encerramento exibindo itens,
+  preços e total a pagar; confirmação manual de cobrança aprovada fora do sistema;
+  encerramento grava a venda e fecha a comanda em uma única transação (RN13-15);
+  número da comanda é liberado após o fechamento; comanda vazia não pode ser
+  encerrada (RN09).
+
 ## 1.6 - 2026-09-17
 
 - implementadas comandas (Etapa 3): grade de números abertos, abertura,
