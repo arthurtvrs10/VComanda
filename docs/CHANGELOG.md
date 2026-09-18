@@ -1,5 +1,15 @@
 # Histórico de alterações
 
+## 1.9 - 2026-09-18
+
+- backup e recuperação (Etapa 6, RF21-24): backup automático na primeira
+  abertura do dia e ao encerrar o app, backup manual com opção de pasta
+  externa, validação de formato/versão/integridade/checksum, e restauração
+  com cópia preventiva da base atual e reinício automático do aplicativo;
+  motor de backup passa a usar a API de snapshot nativa do SQLite em vez de
+  cópia de arquivo direta; retenção mantém as 30 cópias mais recentes na
+  pasta gerenciada.
+
 ## 1.8 - 2026-09-18
 
 - histórico e resumo (Etapa 5, RF18-20): tela combinando consulta de vendas
