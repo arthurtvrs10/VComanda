@@ -1,9 +1,11 @@
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Application.Backup;
 using VarthexComanda.Application.Catalogo;
 using VarthexComanda.Domain;
+using VarthexComanda.Infrastructure.Persistence;
 using VarthexComanda.Infrastructure.Storage;
 
 namespace VarthexComanda.Infrastructure.Backup;
@@ -34,6 +36,19 @@ public class EfBackupService : IBackupService
         var agora = _relogio.UtcNow;
         var nomeArquivo = $"varthex-comanda-{agora:yyyy-MM-dd-HHmmss}.db";
         var destinoFinal = Path.Combine(pastaDestino, nomeArquivo);
+
+        // Duas chamadas dentro do mesmo segundo do relógio (ex.: a cópia preventiva
+        // criada por RestaurarPara logo após um backup manual) gerariam o mesmo
+        // nome de arquivo; desambiguamos com um sufixo para nunca sobrescrever um
+        // backup existente.
+        var sufixo = 1;
+        while (File.Exists(destinoFinal))
+        {
+            nomeArquivo = $"varthex-comanda-{agora:yyyy-MM-dd-HHmmss}-{sufixo}.db";
+            destinoFinal = Path.Combine(pastaDestino, nomeArquivo);
+            sufixo++;
+        }
+
         var destinoTemporario = destinoFinal + ".tmp";
 
         try
@@ -112,11 +127,45 @@ public class EfBackupService : IBackupService
 
     private static bool VerificarIntegridade(string caminhoArquivo)
     {
-        using var conexao = new SqliteConnection($"Data Source={caminhoArquivo};Pooling=False");
-        conexao.Open();
-        using var comando = conexao.CreateCommand();
-        comando.CommandText = "PRAGMA integrity_check";
-        return (string?)comando.ExecuteScalar() == "ok";
+        try
+        {
+            using var conexao = new SqliteConnection($"Data Source={caminhoArquivo};Pooling=False");
+            conexao.Open();
+            using var comando = conexao.CreateCommand();
+            comando.CommandText = "PRAGMA integrity_check";
+            return (string?)comando.ExecuteScalar() == "ok";
+        }
+        catch (SqliteException)
+        {
+            // Corrupção severa pode fazer o próprio PRAGMA falhar em vez de retornar
+            // uma lista de problemas — nesse caso o arquivo também é considerado corrompido.
+            return false;
+        }
+    }
+
+    private static bool TemCabecalhoSqliteValido(string caminhoArquivo)
+    {
+        // Usamos uma conexão SQLite (em vez de ler os bytes do arquivo diretamente)
+        // para essa checagem porque conexões SQLite concorrentes para o mesmo
+        // arquivo são compatíveis entre si por design, enquanto um FileStream bruto
+        // pode colidir com um handle nativo ainda aberto (pooling) de uma conexão
+        // recém-usada nesse mesmo arquivo. "PRAGMA schema_version" só toca o
+        // cabeçalho de 100 bytes do arquivo (sem precisar percorrer páginas de
+        // dados), então distingue "não é SQLite" de "SQLite corrompido" mesmo
+        // quando a corrupção afeta apenas o conteúdo após o cabeçalho.
+        try
+        {
+            using var conexao = new SqliteConnection($"Data Source={caminhoArquivo};Pooling=False");
+            conexao.Open();
+            using var comando = conexao.CreateCommand();
+            comando.CommandText = "PRAGMA schema_version";
+            comando.ExecuteScalar();
+            return true;
+        }
+        catch (SqliteException)
+        {
+            return false;
+        }
     }
 
     private void AplicarRetencao(string pasta)
@@ -144,7 +193,122 @@ public class EfBackupService : IBackupService
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
-    public RelatorioValidacao Validar(string caminhoArquivo) => throw new NotImplementedException("Implementado na Task 3.");
+    public RelatorioValidacao Validar(string caminhoArquivo)
+    {
+        if (!File.Exists(caminhoArquivo)
+            || !caminhoArquivo.EndsWith(".db", StringComparison.OrdinalIgnoreCase)
+            || !TemCabecalhoSqliteValido(caminhoArquivo))
+        {
+            return new RelatorioValidacao
+            {
+                FormatoValido = false,
+                VersaoCompativel = false,
+                IntegridadeOk = false,
+                ChecksumConfere = null,
+                Motivo = "Arquivo não encontrado ou não é um banco .db."
+            };
+        }
 
-    public Resultado<BackupRegistro> RestaurarPara(string caminhoArquivo) => throw new NotImplementedException("Implementado na Task 3.");
+        // A partir daqui o cabeçalho SQLite já foi validado, então o arquivo tem o
+        // formato correto mesmo que esteja corrompido internamente — corrupção de
+        // dados é responsabilidade da checagem de integridade abaixo, não do formato.
+        var versaoCompativel = true;
+        try
+        {
+            var opcoes = new DbContextOptionsBuilder<VarthexComandaDbContext>()
+                .UseSqlite($"Data Source={caminhoArquivo};Pooling=False")
+                .Options;
+            using var contexto = new VarthexComandaDbContext(opcoes);
+            var aplicadas = contexto.Database.GetAppliedMigrations().ToList();
+            var conhecidas = contexto.Database.GetMigrations().ToList();
+            var ultimaAplicada = aplicadas.LastOrDefault();
+            versaoCompativel = ultimaAplicada is null || conhecidas.Contains(ultimaAplicada);
+        }
+        catch (SqliteException)
+        {
+            // Não foi possível ler o histórico de migrações (provável corrupção de
+            // dados). Não tratamos isso como incompatibilidade de versão; a
+            // checagem de integridade abaixo é quem vai reportar o problema real.
+            versaoCompativel = true;
+        }
+
+        if (!versaoCompativel)
+        {
+            return new RelatorioValidacao
+            {
+                FormatoValido = true,
+                VersaoCompativel = false,
+                IntegridadeOk = false,
+                ChecksumConfere = null,
+                Motivo = "Backup de uma versão incompatível do Varthex Comanda."
+            };
+        }
+
+        if (!VerificarIntegridade(caminhoArquivo))
+        {
+            return new RelatorioValidacao
+            {
+                FormatoValido = true,
+                VersaoCompativel = true,
+                IntegridadeOk = false,
+                ChecksumConfere = null,
+                Motivo = "Arquivo de backup está corrompido (falhou na verificação de integridade)."
+            };
+        }
+
+        bool? checksumConfere = null;
+        var companheiro = caminhoArquivo + ".sha256";
+        if (File.Exists(companheiro))
+        {
+            var esperado = File.ReadAllText(companheiro).Trim();
+            var calculado = CalcularChecksumSha256(caminhoArquivo);
+            checksumConfere = string.Equals(esperado, calculado, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return new RelatorioValidacao
+        {
+            FormatoValido = true,
+            VersaoCompativel = true,
+            IntegridadeOk = true,
+            ChecksumConfere = checksumConfere,
+            Motivo = string.Empty
+        };
+    }
+
+    public Resultado<BackupRegistro> RestaurarPara(string caminhoArquivo)
+    {
+        try
+        {
+            var preventivo = CriarBackupGerenciado();
+            if (!preventivo.Sucesso)
+            {
+                return Resultado<BackupRegistro>.Falha("Não foi possível criar a cópia preventiva; restauração cancelada.");
+            }
+
+            var temporario = _paths.DatabasePath + ".restaurando";
+            using (var origem = new SqliteConnection($"Data Source={caminhoArquivo};Pooling=False"))
+            using (var destino = new SqliteConnection($"Data Source={temporario};Pooling=False"))
+            {
+                origem.Open();
+                destino.Open();
+                origem.BackupDatabase(destino);
+            }
+
+            if (!VerificarIntegridade(temporario))
+            {
+                File.Delete(temporario);
+                return Resultado<BackupRegistro>.Falha("A restauração falhou na verificação de integridade; a base ativa não foi alterada.");
+            }
+
+            SqliteConnection.ClearAllPools();
+            File.Copy(temporario, _paths.DatabasePath, overwrite: true);
+            File.Delete(temporario);
+
+            return preventivo;
+        }
+        catch (Exception ex)
+        {
+            return Resultado<BackupRegistro>.Falha(ex.Message);
+        }
+    }
 }

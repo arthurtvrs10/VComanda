@@ -124,6 +124,169 @@ public class EfBackupServiceTests : IDisposable
         Assert.Equal(5, arquivos.Length);
     }
 
+    [Fact]
+    public void Validar_ArquivoValido_TodasAsChecagensPassam()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var resultado = servico.CriarBackupGerenciado();
+        var caminho = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+
+        var relatorio = servico.Validar(caminho);
+
+        Assert.True(relatorio.FormatoValido);
+        Assert.True(relatorio.VersaoCompativel);
+        Assert.True(relatorio.IntegridadeOk);
+        Assert.True(relatorio.ChecksumConfere);
+        Assert.True(relatorio.Aprovado);
+    }
+
+    [Fact]
+    public void Validar_ArquivoNaoSqlite_FalhaNoFormato()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var caminhoInvalido = Path.Combine(_raizTeste, "nao-e-um-banco.db");
+        File.WriteAllText(caminhoInvalido, "isto nao e um banco sqlite");
+
+        var relatorio = servico.Validar(caminhoInvalido);
+
+        Assert.False(relatorio.FormatoValido);
+        Assert.False(relatorio.Aprovado);
+        Assert.NotEmpty(relatorio.Motivo);
+    }
+
+    [Fact]
+    public void Validar_ArquivoInexistente_FalhaNoFormato()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+
+        var relatorio = servico.Validar(Path.Combine(_raizTeste, "nao-existe.db"));
+
+        Assert.False(relatorio.FormatoValido);
+        Assert.False(relatorio.Aprovado);
+    }
+
+    [Fact]
+    public void Validar_MigracaoFuturaDesconhecida_FalhaNaVersao()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var resultado = servico.CriarBackupGerenciado();
+        var caminho = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+
+        using (var conexao = new SqliteConnection($"Data Source={caminho}"))
+        {
+            conexao.Open();
+            using var comando = conexao.CreateCommand();
+            comando.CommandText =
+                "INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES ('99999999999999_MigracaoFutura', '99.0.0')";
+            comando.ExecuteNonQuery();
+        }
+
+        var relatorio = servico.Validar(caminho);
+
+        Assert.True(relatorio.FormatoValido);
+        Assert.False(relatorio.VersaoCompativel);
+        Assert.False(relatorio.Aprovado);
+    }
+
+    [Fact]
+    public void Validar_ArquivoCorrompido_FalhaNaIntegridade()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var resultado = servico.CriarBackupGerenciado();
+        var caminho = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+
+        SqliteConnection.ClearAllPools();
+        using (var stream = new FileStream(caminho, FileMode.Open, FileAccess.Write))
+        {
+            stream.Seek(100, SeekOrigin.Begin);
+            var lixo = new byte[200];
+            new Random(42).NextBytes(lixo);
+            stream.Write(lixo, 0, lixo.Length);
+        }
+
+        var relatorio = servico.Validar(caminho);
+
+        Assert.True(relatorio.FormatoValido);
+        Assert.True(relatorio.VersaoCompativel);
+        Assert.False(relatorio.IntegridadeOk);
+        Assert.False(relatorio.Aprovado);
+    }
+
+    [Fact]
+    public void Validar_SemArquivoSha256Companheiro_ChecksumNaoVerificavelMasAprovado()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        var resultado = servico.CriarBackupGerenciado();
+        var caminho = Path.Combine(resultado.Valor!.Destino, resultado.Valor.Arquivo);
+        File.Delete(caminho + ".sha256");
+
+        var relatorio = servico.Validar(caminho);
+
+        Assert.Null(relatorio.ChecksumConfere);
+        Assert.True(relatorio.Aprovado);
+    }
+
+    [Fact]
+    public void RestaurarPara_ArquivoValido_CriaCopiaPreventivaETrocaABaseAtiva()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            contexto.Categorias.Add(new Categoria { Id = 0, Nome = "Original", Ativo = true, CriadoEm = relogio.UtcNow, AtualizadoEm = relogio.UtcNow });
+            contexto.SaveChanges();
+        }
+        var backupComOriginal = servico.CriarBackupGerenciado();
+        var caminhoBackupOriginal = Path.Combine(backupComOriginal.Valor!.Destino, backupComOriginal.Valor.Arquivo);
+
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            contexto.Categorias.Add(new Categoria { Id = 0, Nome = "Nova", Ativo = true, CriadoEm = relogio.UtcNow, AtualizadoEm = relogio.UtcNow });
+            contexto.SaveChanges();
+        }
+
+        var resultado = servico.RestaurarPara(caminhoBackupOriginal);
+
+        Assert.True(resultado.Sucesso);
+        SqliteConnection.ClearAllPools();
+        using (var contextoPosRestauracao = _fabrica.CreateDbContext())
+        {
+            var nomes = contextoPosRestauracao.Categorias.Select(c => c.Nome).ToList();
+            Assert.Contains("Original", nomes);
+            Assert.DoesNotContain("Nova", nomes);
+        }
+    }
+
+    [Fact]
+    public void RestaurarPara_ArquivoInvalido_NaoAlteraABaseAtiva()
+    {
+        var relogio = new FakeClockDeIntegracao();
+        var servico = new EfBackupService(_paths, _registros, relogio);
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            contexto.Categorias.Add(new Categoria { Id = 0, Nome = "Preservada", Ativo = true, CriadoEm = relogio.UtcNow, AtualizadoEm = relogio.UtcNow });
+            contexto.SaveChanges();
+        }
+        var caminhoInvalido = Path.Combine(_raizTeste, "invalido.db");
+        File.WriteAllText(caminhoInvalido, "nao e um banco");
+
+        var resultado = servico.RestaurarPara(caminhoInvalido);
+
+        Assert.False(resultado.Sucesso);
+        SqliteConnection.ClearAllPools();
+        using (var contexto = _fabrica.CreateDbContext())
+        {
+            Assert.Contains("Preservada", contexto.Categorias.Select(c => c.Nome).ToList());
+        }
+    }
+
     private class FakeClockDeIntegracao : VarthexComanda.Application.Abstractions.IClock
     {
         public DateTime UtcNow { get; set; } = new DateTime(2026, 9, 18, 12, 0, 0, DateTimeKind.Utc);
