@@ -40,6 +40,9 @@ public partial class HistoricoViewModel : ObservableObject
     private int quantidadeVendas;
 
     [ObservableProperty]
+    private int quantidadeExibida;
+
+    [ObservableProperty]
     private long totalDiaCentavos;
 
     [ObservableProperty]
@@ -47,6 +50,9 @@ public partial class HistoricoViewModel : ObservableObject
 
     [ObservableProperty]
     private string mensagem = string.Empty;
+
+    [ObservableProperty]
+    private string mensagemListaVazia = string.Empty;
 
     partial void OnDataSelecionadaChanged(DateTime value) => AtualizarVendas();
 
@@ -108,8 +114,16 @@ public partial class HistoricoViewModel : ObservableObject
             Vendas.Add(venda);
         }
 
-        QuantidadeVendas = filtradas.Count;
-        TotalDiaCentavos = filtradas.Sum(vr => vr.Venda.TotalCentavos);
+        QuantidadeExibida = filtradas.Count;
+
+        QuantidadeVendas = _vendasCarregadas.Count;
+        TotalDiaCentavos = _vendasCarregadas.Sum(vr => vr.Venda.TotalCentavos);
         TicketMedioCentavos = QuantidadeVendas == 0 ? 0 : TotalDiaCentavos / QuantidadeVendas;
+
+        MensagemListaVazia = QuantidadeExibida > 0
+            ? string.Empty
+            : QuantidadeVendas == 0
+                ? "Ainda não há vendas concluídas nesta data."
+                : "Nenhuma venda encontrada para esse número.";
     }
 }

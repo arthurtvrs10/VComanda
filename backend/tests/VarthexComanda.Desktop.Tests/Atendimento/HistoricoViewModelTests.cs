@@ -78,6 +78,25 @@ public class HistoricoViewModelTests
     }
 
     [Fact]
+    public void BuscaPorNumero_SemCorrespondencia_ResumoDiarioPermaneceEListaFicaVazia()
+    {
+        var relogio = new FakeClock { UtcNow = new DateTime(2026, 9, 18, 14, 0, 0, DateTimeKind.Utc) };
+        var vendas = new FakeVendaRepository();
+        vendas.AdicionarVenda(CriarVenda(1, 1, 1000, new DateTime(2026, 9, 18, 15, 0, 0, DateTimeKind.Utc)), 10, new List<ItemComanda>());
+        vendas.AdicionarVenda(CriarVenda(2, 2, 2000, new DateTime(2026, 9, 18, 16, 0, 0, DateTimeKind.Utc)), 20, new List<ItemComanda>());
+        var viewModel = new HistoricoViewModel(new ListarVendasPorData(vendas), new BuscarItensDaVenda(vendas), relogio);
+
+        viewModel.TextoBuscaNumero = "999";
+
+        Assert.Empty(viewModel.Vendas);
+        Assert.Equal(0, viewModel.QuantidadeExibida);
+        Assert.Equal(2, viewModel.QuantidadeVendas);
+        Assert.Equal(3000, viewModel.TotalDiaCentavos);
+        Assert.Equal(1500, viewModel.TicketMedioCentavos);
+        Assert.Equal("Nenhuma venda encontrada para esse número.", viewModel.MensagemListaVazia);
+    }
+
+    [Fact]
     public void SelecionarVenda_PopulaItensDaVendaSelecionada()
     {
         var relogio = new FakeClock { UtcNow = new DateTime(2026, 9, 18, 14, 0, 0, DateTimeKind.Utc) };
