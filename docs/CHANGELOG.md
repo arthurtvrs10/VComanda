@@ -1,5 +1,19 @@
 # Histórico de alterações
 
+## 1.10 — Configurações do estabelecimento (RF25)
+
+- Nova tela "Configurações": nome do estabelecimento, quantidade máxima de
+  comandas e pasta de backup externa padrão, persistidos na tabela
+  `configuracao` já existente desde a base técnica.
+- `AbrirComanda` passa a respeitar a quantidade máxima configurada (sem
+  teto enquanto nada for configurado, preservando o comportamento
+  anterior) — resolve QV02.
+- O backup automático do encerramento do app (`CriarBackupAutomatico`,
+  ramo incondicional) passa a também copiar para a pasta externa
+  configurada, quando houver uma — cumprindo a política de cópia externa
+  ao fim do dia (docs/08) sem exigir clique manual. A abertura do dia
+  continua só na pasta gerenciada.
+
 ## 1.9 - 2026-09-18
 
 - backup e recuperação (Etapa 6, RF21-24): backup automático na primeira
