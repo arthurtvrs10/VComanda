@@ -1,0 +1,81 @@
+<UserControl x:Class="VarthexComanda.Desktop.Atendimento.HistoricoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:VarthexComanda.Desktop.Atendimento"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:CentavosParaMoedaConverter x:Key="Moeda" />
+        <local:UtcParaHorarioLocalConverter x:Key="Horario" />
+        <local:ContagemParaVisibilidadeConverter x:Key="VisivelSeVazio" />
+        <local:ContagemParaVisibilidadeInversoConverter x:Key="VisivelSePreenchido" />
+    </UserControl.Resources>
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Data:" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <DatePicker SelectedDate="{Binding DataSelecionada}" Width="140" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Vendas: " FontWeight="Bold" />
+            <TextBlock Text="{Binding QuantidadeVendas}" Margin="0,0,16,0" />
+            <TextBlock Text="Total: " FontWeight="Bold" />
+            <TextBlock Text="{Binding TotalDiaCentavos, Converter={StaticResource Moeda}}" Margin="0,0,16,0" />
+            <TextBlock Text="Ticket médio: " FontWeight="Bold" />
+            <TextBlock Text="{Binding TicketMedioCentavos, Converter={StaticResource Moeda}}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Buscar comanda nº:" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox Width="100" Text="{Binding TextoBuscaNumero, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,16,0" />
+            <TextBlock Text="{Binding Mensagem}" Foreground="Red" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Ainda não há vendas concluídas nesta data."
+                           Visibility="{Binding QuantidadeVendas, Converter={StaticResource VisivelSeVazio}}"
+                           Foreground="Gray" Margin="0,12,0,0" />
+                <ListView ItemsSource="{Binding Vendas}"
+                          SelectedItem="{Binding VendaSelecionada}"
+                          Visibility="{Binding QuantidadeVendas, Converter={StaticResource VisivelSePreenchido}}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Comanda" DisplayMemberBinding="{Binding NumeroComanda}" Width="80" />
+                            <GridViewColumn Header="Total" DisplayMemberBinding="{Binding Venda.TotalCentavos, Converter={StaticResource Moeda}}" Width="90" />
+                            <GridViewColumn Header="Horário" DisplayMemberBinding="{Binding Venda.FinalizadaEm, Converter={StaticResource Horario}}" Width="70" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="Detalhe da venda" FontWeight="Bold" Margin="0,0,0,4" />
+                <ListView ItemsSource="{Binding ItensDaVendaSelecionada}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Produto" DisplayMemberBinding="{Binding NomeProduto}" Width="160" />
+                            <GridViewColumn Header="Qtd" DisplayMemberBinding="{Binding Quantidade}" Width="50" />
+                            <GridViewColumn Header="Preço unit." DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="90" />
+                            <GridViewColumn Header="Subtotal" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="90" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

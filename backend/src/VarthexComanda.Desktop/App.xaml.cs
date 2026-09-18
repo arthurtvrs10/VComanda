@@ -82,6 +82,11 @@ public partial class App : System.Windows.Application
         services.AddTransient<EncerramentoViewModel>();
         services.AddTransient<Func<EncerramentoViewModel>>(sp => () => sp.GetRequiredService<EncerramentoViewModel>());
         services.AddTransient<IEncerramentoDialog, EncerramentoDialog>();
+        services.AddTransient<IVendaRepository, EfVendaRepository>();
+        services.AddTransient<ListarVendasPorData>();
+        services.AddTransient<BuscarItensDaVenda>();
+        services.AddTransient<HistoricoViewModel>();
+        services.AddTransient<HistoricoView>();
         services.AddTransient<AtendimentoViewModel>();
         services.AddTransient<AtendimentoView>();
         services.AddTransient<ProdutosViewModel>();
