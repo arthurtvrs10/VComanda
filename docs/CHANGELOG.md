@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 1.8 - 2026-09-18
+
+- histórico e resumo (Etapa 5, RF18-20): tela combinando consulta de vendas
+  por data, localização pelo número da comanda, detalhe dos itens de uma
+  venda e resumo diário (quantidade, total, ticket médio); filtro de data
+  respeita o fuso de Brasília (RN20) mesmo com os horários gravados em UTC;
+  estado vazio quando não há vendas concluídas na data selecionada.
+
 ## 1.7 - 2026-09-18
 
 - encerramento e venda (Etapa 4, RF14-17): tela de encerramento exibindo itens,
