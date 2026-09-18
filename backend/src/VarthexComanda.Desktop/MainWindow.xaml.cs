@@ -2,6 +2,7 @@ using System.Windows;
 using VarthexComanda.Desktop.Atendimento;
 using VarthexComanda.Desktop.Backup;
 using VarthexComanda.Desktop.Catalogo;
+using VarthexComanda.Desktop.Configuracao;
 
 namespace VarthexComanda.Desktop;
 
@@ -11,14 +12,16 @@ public partial class MainWindow : Window
     private readonly ProdutosView _produtosView;
     private readonly HistoricoView _historicoView;
     private readonly BackupView _backupView;
+    private readonly ConfiguracaoView _configuracaoView;
 
-    public MainWindow(AtendimentoView atendimentoView, ProdutosView produtosView, HistoricoView historicoView, BackupView backupView)
+    public MainWindow(AtendimentoView atendimentoView, ProdutosView produtosView, HistoricoView historicoView, BackupView backupView, ConfiguracaoView configuracaoView)
     {
         InitializeComponent();
         _atendimentoView = atendimentoView;
         _produtosView = produtosView;
         _historicoView = historicoView;
         _backupView = backupView;
+        _configuracaoView = configuracaoView;
         ConteudoPrincipal.Content = _atendimentoView;
     }
 
@@ -43,5 +46,11 @@ public partial class MainWindow : Window
     {
         _backupView.ViewModel.AtualizarLista();
         ConteudoPrincipal.Content = _backupView;
+    }
+
+    private void MostrarConfiguracao_Click(object sender, RoutedEventArgs e)
+    {
+        _configuracaoView.ViewModel.Carregar();
+        ConteudoPrincipal.Content = _configuracaoView;
     }
 }
