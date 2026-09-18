@@ -167,4 +167,33 @@ public class EfComandaRepository : IComandaRepository
         contexto.SaveChanges();
         return comanda;
     }
+
+    public Venda EncerrarComanda(int comandaId, DateTime agora)
+    {
+        using var contexto = _fabricaContexto.CreateDbContext();
+        var comanda = contexto.Comandas.SingleOrDefault(c => c.Id == comandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        var proximoNumero = (contexto.Vendas.Max(v => (int?)v.Numero) ?? 0) + 1;
+        var venda = new Venda
+        {
+            Id = 0,
+            ComandaId = comanda.Id,
+            Numero = proximoNumero,
+            TotalCentavos = comanda.TotalCentavos,
+            FinalizadaEm = agora,
+            Status = StatusVenda.Concluida
+        };
+        contexto.Vendas.Add(venda);
+
+        comanda.Status = StatusComanda.Fechada;
+        comanda.FechadaEm = agora;
+
+        contexto.SaveChanges();
+        return venda;
+    }
 }

@@ -11,4 +11,5 @@ public interface IComandaRepository
     ComandaComItens AlterarQuantidade(int itemId, int quantidade, DateTime agora);
     ComandaComItens RemoverItem(int itemId, DateTime agora);
     Comanda CancelarComanda(int comandaId, DateTime agora);
+    Venda EncerrarComanda(int comandaId, DateTime agora);
 }

@@ -134,4 +134,33 @@ public class FakeComandaRepository : IComandaRepository
         comanda.FechadaEm = agora;
         return comanda;
     }
+
+    private readonly List<Venda> _vendas = new();
+    private int _proximoVendaId = 1;
+
+    public Venda EncerrarComanda(int comandaId, DateTime agora)
+    {
+        var comanda = _comandas.FirstOrDefault(c => c.Id == comandaId)
+            ?? throw new InvalidOperationException("Comanda não encontrada.");
+        if (comanda.Status != StatusComanda.Aberta)
+        {
+            throw new ComandaNaoAbertaException();
+        }
+
+        var proximoNumero = (_vendas.Count == 0 ? 0 : _vendas.Max(v => v.Numero)) + 1;
+        var venda = new Venda
+        {
+            Id = _proximoVendaId++,
+            ComandaId = comanda.Id,
+            Numero = proximoNumero,
+            TotalCentavos = comanda.TotalCentavos,
+            FinalizadaEm = agora,
+            Status = StatusVenda.Concluida
+        };
+        _vendas.Add(venda);
+
+        comanda.Status = StatusComanda.Fechada;
+        comanda.FechadaEm = agora;
+        return venda;
+    }
 }

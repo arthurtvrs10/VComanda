@@ -234,4 +234,64 @@ public class EfComandaRepositoryTests : IDisposable
         Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
             () => repositorio.CancelarComanda(comanda.Id, DateTime.UtcNow));
     }
+
+    [Fact]
+    public void EncerrarComanda_ComandaAberta_GravaVendaEFechaComanda()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaId, produto, 2, DateTime.UtcNow);
+
+        var venda = repositorio.EncerrarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Equal(comandaId, venda.ComandaId);
+        Assert.Equal(1000, venda.TotalCentavos);
+        Assert.Equal(StatusVenda.Concluida, venda.Status);
+
+        var detalhe = repositorio.BuscarComItens(comandaId);
+        Assert.Equal(StatusComanda.Fechada, detalhe!.Comanda.Status);
+        Assert.NotNull(detalhe.Comanda.FechadaEm);
+    }
+
+    [Fact]
+    public void EncerrarComanda_DuasVendasSeguidas_NumeroSequencial()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produtoA, comandaIdA) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaIdA, produtoA, 1, DateTime.UtcNow);
+        var comandaB = repositorio.AbrirComanda(30, DateTime.UtcNow);
+        repositorio.AdicionarItem(comandaB.Id, produtoA, 1, DateTime.UtcNow);
+
+        var vendaA = repositorio.EncerrarComanda(comandaIdA, DateTime.UtcNow);
+        var vendaB = repositorio.EncerrarComanda(comandaB.Id, DateTime.UtcNow);
+
+        Assert.Equal(1, vendaA.Numero);
+        Assert.Equal(2, vendaB.Numero);
+    }
+
+    [Fact]
+    public void EncerrarComanda_LiberaNumeroDaComanda()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow);
+
+        repositorio.EncerrarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Empty(repositorio.ListarAbertas());
+        var reaberta = repositorio.AbrirComanda(10, DateTime.UtcNow);
+        Assert.True(reaberta.Id > 0);
+    }
+
+    [Fact]
+    public void EncerrarComanda_ComandaJaFechada_LancaExcecao()
+    {
+        var repositorio = new EfComandaRepository(_fabrica);
+        var (produto, comandaId) = PrepararComandaEProduto(repositorio);
+        repositorio.AdicionarItem(comandaId, produto, 1, DateTime.UtcNow);
+        repositorio.EncerrarComanda(comandaId, DateTime.UtcNow);
+
+        Assert.Throws<VarthexComanda.Application.Atendimento.ComandaNaoAbertaException>(
+            () => repositorio.EncerrarComanda(comandaId, DateTime.UtcNow));
+    }
 }
