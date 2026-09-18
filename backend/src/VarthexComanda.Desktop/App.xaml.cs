@@ -4,9 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Application.Atendimento;
+using VarthexComanda.Application.Backup;
 using VarthexComanda.Application.Catalogo;
 using VarthexComanda.Desktop.Atendimento;
+using VarthexComanda.Desktop.Backup;
 using VarthexComanda.Desktop.Catalogo;
+using VarthexComanda.Infrastructure.Backup;
 using VarthexComanda.Infrastructure.Concurrency;
 using VarthexComanda.Infrastructure.Logging;
 using VarthexComanda.Infrastructure.Persistence;
@@ -87,6 +90,15 @@ public partial class App : System.Windows.Application
         services.AddTransient<BuscarItensDaVenda>();
         services.AddTransient<HistoricoViewModel>();
         services.AddTransient<HistoricoView>();
+        services.AddTransient<IBackupRegistroRepository, EfBackupRegistroRepository>();
+        services.AddTransient<IBackupService, EfBackupService>();
+        services.AddTransient<CriarBackupAutomatico>();
+        services.AddTransient<CriarBackupManual>();
+        services.AddTransient<ValidarBackup>();
+        services.AddTransient<RestaurarBackup>();
+        services.AddTransient<ListarBackupsRecentes>();
+        services.AddTransient<BackupViewModel>();
+        services.AddTransient<BackupView>();
         services.AddTransient<AtendimentoViewModel>();
         services.AddTransient<AtendimentoView>();
         services.AddTransient<ProdutosViewModel>();
@@ -98,16 +110,20 @@ public partial class App : System.Windows.Application
         try
         {
             var factory = _serviceProvider.GetRequiredService<IDbContextFactory<VarthexComandaDbContext>>();
-            var clock = _serviceProvider.GetRequiredService<IClock>();
             using var dbContext = factory.CreateDbContext();
 
             var pendentes = dbContext.Database.GetPendingMigrations().ToList();
             if (pendentes.Count > 0)
             {
-                var backupCriado = DatabaseBackupService.BackupIfExists(paths.DatabasePath, paths.BackupsDirectory, clock.UtcNow);
-                if (backupCriado is not null)
+                var backupService = _serviceProvider.GetRequiredService<IBackupService>();
+                var resultadoPreventivo = backupService.CriarBackupGerenciado();
+                if (resultadoPreventivo.Sucesso)
                 {
-                    _logger.Information("Backup preventivo criado em {Caminho} antes de aplicar {Quantidade} migração(ões) pendente(s)", backupCriado, pendentes.Count);
+                    _logger.Information("Backup preventivo criado antes de aplicar {Quantidade} migração(ões) pendente(s)", pendentes.Count);
+                }
+                else
+                {
+                    _logger.Warning("Backup preventivo antes da migração falhou: {Mensagem}", string.Join(" ", resultadoPreventivo.Erros));
                 }
             }
 
@@ -131,6 +147,8 @@ public partial class App : System.Windows.Application
 
             _logger.Information("Banco pronto em {Caminho}", paths.DatabasePath);
 
+            _serviceProvider.GetRequiredService<CriarBackupAutomatico>().Executar();
+
             _serviceProvider.GetRequiredService<MainWindow>().Show();
         }
         catch (Exception ex)
@@ -148,6 +166,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _serviceProvider?.GetRequiredService<CriarBackupAutomatico>().Executar(incondicional: true);
         _logger?.Information("Encerrando Varthex Comanda");
         _serviceProvider?.Dispose();
         (_logger as IDisposable)?.Dispose();

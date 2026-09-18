@@ -9,7 +9,8 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
             <Button Content="Atendimento" Padding="12,4" Margin="0,0,8,0" Click="MostrarAtendimento_Click" />
             <Button Content="Produtos" Padding="12,4" Margin="0,0,8,0" Click="MostrarProdutos_Click" />
-            <Button Content="Histórico" Padding="12,4" Click="MostrarHistorico_Click" />
+            <Button Content="Histórico" Padding="12,4" Margin="0,0,8,0" Click="MostrarHistorico_Click" />
+            <Button Content="Backup" Padding="12,4" Click="MostrarBackup_Click" />
         </StackPanel>
         <ContentControl x:Name="ConteudoPrincipal" />
     </DockPanel>

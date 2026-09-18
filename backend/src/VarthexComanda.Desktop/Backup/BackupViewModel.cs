@@ -77,9 +77,19 @@ public partial class BackupViewModel : ObservableObject
         }
 
         var caminho = Path.Combine(BackupSelecionado.Destino, BackupSelecionado.Arquivo);
-        var mensagemConfirmacao =
-            $"Isso vai substituir todos os dados atuais pelo backup de {BackupSelecionado.CriadoEm:dd/MM/yyyy HH:mm}. " +
-            "Uma cópia de segurança da base atual será criada antes.";
+        RestaurarCaminho(caminho, BackupSelecionado.CriadoEm);
+    }
+
+    public void RestaurarArquivoExterno(string caminho)
+    {
+        RestaurarCaminho(caminho, null);
+    }
+
+    private void RestaurarCaminho(string caminho, DateTime? criadoEm)
+    {
+        var mensagemConfirmacao = criadoEm is not null
+            ? $"Isso vai substituir todos os dados atuais pelo backup de {criadoEm:dd/MM/yyyy HH:mm}. Uma cópia de segurança da base atual será criada antes."
+            : "Isso vai substituir todos os dados atuais pelo backup selecionado. Uma cópia de segurança da base atual será criada antes.";
         if (!_confirmador.Confirmar("Restaurar backup", mensagemConfirmacao))
         {
             return;
