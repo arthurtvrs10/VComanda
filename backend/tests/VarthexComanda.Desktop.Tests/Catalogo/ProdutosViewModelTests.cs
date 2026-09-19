@@ -8,7 +8,7 @@ namespace VarthexComanda.Desktop.Tests.Catalogo;
 
 public class ProdutosViewModelTests
 {
-    private static ProdutosViewModel CriarViewModel(FakeCategoriaRepository categorias, FakeProdutoRepository produtos, FakeFotoStorage? fotos = null)
+    private static ProdutosViewModel CriarViewModel(FakeCategoriaRepository categorias, FakeProdutoRepository produtos, IFotoStorage? fotos = null)
     {
         var relogio = new FakeClock();
         fotos ??= new FakeFotoStorage();
@@ -185,6 +185,89 @@ public class ProdutosViewModelTests
         Assert.Equal("EDITAR PRODUTO", viewModel.TituloFormulario);
         Assert.Contains("Produto cadastrado, mas a foto não foi adicionada", viewModel.Mensagem);
         Assert.Contains("Formato não suportado. Use JPG, PNG ou BMP.", viewModel.Mensagem);
+    }
+
+    private sealed class FotoStorageQueLancaExcecao : IFotoStorage
+    {
+        public string Importar(string caminhoOrigem) => throw new InvalidOperationException("falha de IO");
+
+        public void Excluir(string nomeArquivo)
+        {
+        }
+    }
+
+    private static (ProdutosViewModel ViewModel, FakeProdutoRepository Produtos, FakeFotoStorage Fotos) CriarComDuasCategoriasEFotoRejeitada()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        new CadastrarCategoria(categorias, relogio).Executar("Bebidas");
+        new CadastrarCategoria(categorias, relogio).Executar("Lanches");
+        var produtos = new FakeProdutoRepository();
+        var fotos = new FakeFotoStorage { MensagemRejeicao = "Formato não suportado. Use JPG, PNG ou BMP." };
+        var viewModel = CriarViewModel(categorias, produtos, fotos);
+        viewModel.NomeProduto = "Refrigerante";
+        viewModel.CategoriaProduto = viewModel.Categorias.Single(c => c.Nome == "Bebidas");
+        viewModel.PrecoProdutoReais = "5,00";
+        viewModel.DefinirFoto("C:\\documento.pdf");
+        return (viewModel, produtos, fotos);
+    }
+
+    [Fact]
+    public void Cadastrar_FotoRejeitadaComFiltroAtivo_ProdutoFicaSelecionadoEFiltroELimpo()
+    {
+        var (viewModel, produtos, _) = CriarComDuasCategoriasEFotoRejeitada();
+        viewModel.CategoriaFiltro = viewModel.Categorias.Single(c => c.Nome == "Lanches");
+
+        viewModel.SalvarCommand.Execute(null);
+
+        var criado = Assert.Single(produtos.Pesquisar(null, null));
+        Assert.NotNull(viewModel.ProdutoSelecionado);
+        Assert.Equal(criado.Id, viewModel.ProdutoSelecionado!.Id);
+        Assert.Null(viewModel.CategoriaFiltro);
+        Assert.Contains("Produto cadastrado, mas a foto não foi adicionada", viewModel.Mensagem);
+
+        viewModel.SalvarCommand.Execute(null);
+
+        Assert.Single(produtos.Pesquisar(null, null));
+    }
+
+    [Fact]
+    public void Cadastrar_FotoRejeitadaComBuscaAtiva_ProdutoFicaSelecionadoEBuscaELimpa()
+    {
+        var (viewModel, produtos, _) = CriarComDuasCategoriasEFotoRejeitada();
+        viewModel.TextoBusca = "Hamburguer";
+
+        viewModel.SalvarCommand.Execute(null);
+
+        var criado = Assert.Single(produtos.Pesquisar(null, null));
+        Assert.NotNull(viewModel.ProdutoSelecionado);
+        Assert.Equal(criado.Id, viewModel.ProdutoSelecionado!.Id);
+        Assert.Equal(string.Empty, viewModel.TextoBusca);
+        Assert.Contains("Produto cadastrado, mas a foto não foi adicionada", viewModel.Mensagem);
+
+        viewModel.SalvarCommand.Execute(null);
+
+        Assert.Single(produtos.Pesquisar(null, null));
+    }
+
+    [Fact]
+    public void Cadastrar_FotoLancaExcecao_ProdutoFicaCadastradoESelecionadoComMensagemGenerica()
+    {
+        var categorias = new FakeCategoriaRepository();
+        new CadastrarCategoria(categorias, new FakeClock()).Executar("Bebidas");
+        var produtos = new FakeProdutoRepository();
+        var viewModel = CriarViewModel(categorias, produtos, new FotoStorageQueLancaExcecao());
+        viewModel.NomeProduto = "Refrigerante";
+        viewModel.CategoriaProduto = viewModel.Categorias[0];
+        viewModel.PrecoProdutoReais = "5,00";
+        viewModel.DefinirFoto("C:\\foto.jpg");
+
+        viewModel.SalvarCommand.Execute(null);
+
+        var criado = Assert.Single(produtos.Pesquisar(null, null));
+        Assert.NotNull(viewModel.ProdutoSelecionado);
+        Assert.Equal(criado.Id, viewModel.ProdutoSelecionado!.Id);
+        Assert.Equal("Produto cadastrado, mas não foi possível salvar a foto. Tente novamente.", viewModel.Mensagem);
     }
 
     [Fact]

@@ -193,10 +193,22 @@ public partial class ProdutosViewModel : ObservableObject
 
                 if (falhaFoto is not null)
                 {
-                    // O produto continua cadastrado: seleciona-o para o usuario tentar a foto de novo.
+                    // O produto continua cadastrado: limpa os filtros para ele aparecer na lista e o
+                    // seleciona para o usuario tentar a foto de novo (sem risco de cadastrar duplicado).
+                    CategoriaFiltro = null;
+                    TextoBusca = string.Empty;
                     Pesquisar();
-                    ProdutoSelecionado = Produtos.FirstOrDefault(p => p.Id == criado.Id);
-                    Mensagem = falhaFoto;
+                    var selecionado = Produtos.FirstOrDefault(p => p.Id == criado.Id);
+                    if (selecionado is not null)
+                    {
+                        ProdutoSelecionado = selecionado;
+                        Mensagem = falhaFoto;
+                    }
+                    else
+                    {
+                        Novo();
+                        Mensagem = falhaFoto + " Localize o produto na lista para adicionar a foto.";
+                    }
                     return;
                 }
             }
