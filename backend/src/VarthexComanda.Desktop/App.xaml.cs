@@ -91,7 +91,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<AlterarQuantidade>();
         services.AddTransient<RemoverItem>();
         services.AddTransient<CancelarComanda>();
-        services.AddTransient<IConfirmador, MessageBoxConfirmador>();
+        services.AddTransient<IConfirmador, JanelaConfirmador>();
         services.AddTransient<EncerrarComanda>();
         services.AddTransient<EncerramentoViewModel>();
         services.AddTransient<Func<EncerramentoViewModel>>(sp => () => sp.GetRequiredService<EncerramentoViewModel>());
