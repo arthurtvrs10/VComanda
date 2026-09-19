@@ -1,5 +1,20 @@
 # Histórico de alterações
 
+## 1.11 - 2026-09-18 - Redesign da tela de Atendimento
+
+- Grade de comandas passa a mostrar um número fixo de slots numerados
+  (configurável em Configurações, 20 por padrão), cada um marcado como
+  "aberta" (com total e tempo desde a abertura) ou "livre" — em vez da
+  lista dinâmica anterior só com comandas já abertas.
+- Tela de edição de uma comanda passa a mostrar o menu de produtos como
+  uma grade de cards (com placeholder de foto) filtrável por categoria,
+  e o carrinho como uma tabela com colunas Descrição/Qtd./Preço/Total.
+- Botão "Finalizar comanda" ganha o atalho de teclado F4; continua
+  abrindo a mesma tela de Encerramento já existente desde a Etapa 4.
+- Toda a lógica de negócio (abrir, adicionar/alterar/remover item,
+  cancelar, encerrar) foi reaproveitada sem alteração — esta fatia é
+  só a reconstrução visual da tela.
+
 ## 1.10 - 2026-09-18 - Configurações do estabelecimento (RF25)
 
 - Nova tela "Configurações": nome do estabelecimento, quantidade máxima de
