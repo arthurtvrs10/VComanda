@@ -47,7 +47,8 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        var paths = new AppPaths();
+        var raizDados = Environment.GetEnvironmentVariable("VARTHEX_COMANDA_DADOS");
+        var paths = new AppPaths(string.IsNullOrWhiteSpace(raizDados) ? null : raizDados);
         paths.EnsureCreated();
         VarthexComanda.Desktop.Catalogo.FotoArquivoParaImagemConverter.DiretorioFotos = paths.FotosDirectory;
 

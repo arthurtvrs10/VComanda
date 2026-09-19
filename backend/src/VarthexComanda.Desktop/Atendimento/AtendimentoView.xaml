@@ -118,6 +118,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Width="128" Height="128" Margin="0,0,8,8" Padding="0"
+                                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                                         Background="White" BorderBrush="#C4C4C4" BorderThickness="1"
                                         Command="{Binding DataContext.AdicionarProdutoAoItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}">

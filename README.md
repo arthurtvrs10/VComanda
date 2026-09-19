@@ -13,12 +13,28 @@
 numeradas: você lança os itens, ele calcula o total e mostra o valor para você
 digitar na maquininha — sem nunca tocar em pagamento.**
 
+<img src="docs/design/atendimento-grade.png" alt="Grade de comandas" width="900">
+
 </div>
 
 Pensado para o balcão de um pequeno negócio: uma grade com todas as comandas
 (livres ou abertas), um menu de produtos com foto e um carrinho em tabela, tudo
 com botões grandes o bastante para o toque. Funciona 100% offline, com os dados
 num banco SQLite local.
+
+## Telas
+
+![Dentro da comanda](docs/design/atendimento-comanda.png)
+
+Dentro da comanda: menu com fotos à esquerda, carrinho à direita.
+
+![Produtos](docs/design/produtos.png)
+
+Produtos: cadastro com foto, modo de edição.
+
+![Histórico](docs/design/historico.png)
+
+Histórico: vendas do dia, resumo e detalhe dos itens.
 
 ## Instalação
 
@@ -74,7 +90,9 @@ Tudo em `%LOCALAPPDATA%\VarthexComanda\`:
 
 Valores são guardados em **centavos** e datas em **UTC**; a tela converte para o
 horário de Brasília (UTC−3, fixo) só na exibição. Só uma instância do app roda
-por vez.
+por vez. A pasta de dados pode ser redirecionada com a variável de ambiente
+`VARTHEX_COMANDA_DADOS` (útil para demonstrações e testes sem tocar nos dados
+reais).
 
 ## O que ele não faz
 
