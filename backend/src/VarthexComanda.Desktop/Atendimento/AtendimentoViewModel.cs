@@ -104,6 +104,9 @@ public partial class AtendimentoViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SelecionarCategoria(Categoria categoria) => CategoriaCatalogo = categoria;
+
+    [RelayCommand]
     private void Abrir()
     {
         if (!int.TryParse(NovoNumero, out var numero))
