@@ -79,6 +79,11 @@ public partial class App : System.Windows.Application
         services.AddTransient<AlterarProduto>();
         services.AddTransient<DesativarProduto>();
         services.AddTransient<PesquisarProdutos>();
+        services.AddSingleton<IFotoStorage>(sp => new ArquivoFotoStorage(
+            sp.GetRequiredService<AppPaths>(),
+            sp.GetRequiredService<ILogger>()));
+        services.AddTransient<DefinirFotoProduto>();
+        services.AddTransient<RemoverFotoProduto>();
         services.AddTransient<IComandaRepository, EfComandaRepository>();
         services.AddTransient<AbrirComanda>();
         services.AddTransient<AdicionarItem>();

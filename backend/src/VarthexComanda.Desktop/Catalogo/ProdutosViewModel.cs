@@ -17,6 +17,8 @@ public partial class ProdutosViewModel : ObservableObject
     private readonly CadastrarProduto _cadastrarProduto;
     private readonly AlterarProduto _alterarProduto;
     private readonly DesativarProduto _desativarProduto;
+    private readonly DefinirFotoProduto _definirFotoProduto;
+    private readonly RemoverFotoProduto _removerFotoProduto;
 
     public ProdutosViewModel(
         ListarCategoriasAtivas listarCategoriasAtivas,
@@ -24,7 +26,9 @@ public partial class ProdutosViewModel : ObservableObject
         PesquisarProdutos pesquisarProdutos,
         CadastrarProduto cadastrarProduto,
         AlterarProduto alterarProduto,
-        DesativarProduto desativarProduto)
+        DesativarProduto desativarProduto,
+        DefinirFotoProduto definirFotoProduto,
+        RemoverFotoProduto removerFotoProduto)
     {
         _listarCategoriasAtivas = listarCategoriasAtivas;
         _cadastrarCategoria = cadastrarCategoria;
@@ -32,6 +36,8 @@ public partial class ProdutosViewModel : ObservableObject
         _cadastrarProduto = cadastrarProduto;
         _alterarProduto = alterarProduto;
         _desativarProduto = desativarProduto;
+        _definirFotoProduto = definirFotoProduto;
+        _removerFotoProduto = removerFotoProduto;
 
         Categorias = new ObservableCollection<Categoria>();
         Produtos = new ObservableCollection<Produto>();
@@ -50,7 +56,14 @@ public partial class ProdutosViewModel : ObservableObject
     private string textoBusca = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TemProdutoSelecionado))]
     private Produto? produtoSelecionado;
+
+    public bool TemProdutoSelecionado => ProdutoSelecionado is not null;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RemoverFotoCommand))]
+    private string? fotoArquivoAtual;
 
     [ObservableProperty]
     private string nomeProduto = string.Empty;
@@ -82,6 +95,7 @@ public partial class ProdutosViewModel : ObservableObject
             CategoriaProduto = null;
             PrecoProdutoReais = string.Empty;
             ProdutoAtivo = true;
+            FotoArquivoAtual = value?.FotoArquivo;
             Mensagem = string.Empty;
             return;
         }
@@ -90,6 +104,7 @@ public partial class ProdutosViewModel : ObservableObject
         CategoriaProduto = Categorias.FirstOrDefault(c => c.Id == value.CategoriaId);
         PrecoProdutoReais = (value.PrecoCentavos / 100m).ToString("0.00", CulturaMoeda);
         ProdutoAtivo = value.Ativo;
+        FotoArquivoAtual = value?.FotoArquivo;
         Mensagem = string.Empty;
     }
 
@@ -182,6 +197,62 @@ public partial class ProdutosViewModel : ObservableObject
             Mensagem = "Não foi possível desativar o produto. Tente novamente.";
         }
     }
+
+    public void DefinirFoto(string caminhoOrigem)
+    {
+        if (ProdutoSelecionado is null)
+        {
+            Mensagem = "Selecione um produto para definir a foto.";
+            return;
+        }
+
+        try
+        {
+            var resultado = _definirFotoProduto.Executar(ProdutoSelecionado.Id, caminhoOrigem);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
+
+            ProdutoSelecionado.FotoArquivo = resultado.Valor!.FotoArquivo;
+            FotoArquivoAtual = resultado.Valor.FotoArquivo;
+            Mensagem = string.Empty;
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível salvar a foto. Tente novamente.";
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(PodeRemoverFoto))]
+    private void RemoverFoto()
+    {
+        if (ProdutoSelecionado is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var resultado = _removerFotoProduto.Executar(ProdutoSelecionado.Id);
+            if (!resultado.Sucesso)
+            {
+                Mensagem = string.Join(" ", resultado.Erros);
+                return;
+            }
+
+            ProdutoSelecionado.FotoArquivo = null;
+            FotoArquivoAtual = null;
+            Mensagem = string.Empty;
+        }
+        catch (Exception)
+        {
+            Mensagem = "Não foi possível remover a foto. Tente novamente.";
+        }
+    }
+
+    private bool PodeRemoverFoto() => FotoArquivoAtual is not null;
 
     [RelayCommand]
     private void AdicionarCategoria()
