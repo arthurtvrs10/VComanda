@@ -205,33 +205,69 @@
                            Text="{Binding ComandaAtual.Numero, StringFormat='COMANDA #{0}'}" />
 
                 <Border Grid.Row="1" BorderBrush="#C4C4C4" BorderThickness="1">
-                    <ListView ItemsSource="{Binding Itens}" BorderThickness="0" FontSize="14">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="DESCRIÇÃO" DisplayMemberBinding="{Binding NomeProduto}" Width="150" />
-                                <GridViewColumn Header="QTD." DisplayMemberBinding="{Binding Quantidade}" Width="46" />
-                                <GridViewColumn Header="PREÇO" DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="76" />
-                                <GridViewColumn Header="TOTAL" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="76" />
-                                <GridViewColumn Width="186">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Content="−" Width="44" Height="44" FontSize="20" FontWeight="Bold"
-                                                        Command="{Binding DataContext.DiminuirQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                                        CommandParameter="{Binding}" Margin="0,0,4,0" />
-                                                <Button Content="+" Width="44" Height="44" FontSize="20" FontWeight="Bold"
-                                                        Command="{Binding DataContext.AumentarQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                                        CommandParameter="{Binding}" Margin="0,0,4,0" />
-                                                <Button Content="Excluir" Foreground="#B23B32" MinHeight="44"
-                                                        Command="{Binding DataContext.RemoverCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                                        CommandParameter="{Binding}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                    
+                        <Grid Grid.Row="0" Background="#EDEDEA" Margin="0,0,17,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="84" />
+                                <ColumnDefinition Width="84" />
+                                <ColumnDefinition Width="184" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="DESCRIÇÃO" FontSize="12" FontWeight="Bold" Foreground="#4A4A47"
+                                       Margin="8,6" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="QTD." FontSize="12" FontWeight="Bold" Foreground="#4A4A47"
+                                       Margin="0,6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="PREÇO" FontSize="12" FontWeight="Bold" Foreground="#4A4A47"
+                                       Margin="0,6,8,6" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="TOTAL" FontSize="12" FontWeight="Bold" Foreground="#4A4A47"
+                                       Margin="0,6,8,6" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+                    
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Itens}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E4E4E1" BorderThickness="0,0,0,1" Padding="0,4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="44" />
+                                                    <ColumnDefinition Width="84" />
+                                                    <ColumnDefinition Width="84" />
+                                                    <ColumnDefinition Width="184" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding NomeProduto}" FontSize="14"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="8,0" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="14" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" FontSize="14"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                <TextBlock Grid.Column="3" Text="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" FontSize="14"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                    <Button Content="−" Width="44" Height="44" FontSize="20" FontWeight="Bold"
+                                                            Command="{Binding DataContext.DiminuirQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}" Margin="0,0,4,0" />
+                                                    <Button Content="+" Width="44" Height="44" FontSize="20" FontWeight="Bold"
+                                                            Command="{Binding DataContext.AumentarQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}" Margin="0,0,4,0" />
+                                                    <Button Content="Excluir" Foreground="#B23B32" Height="44" MinHeight="44" Padding="12,0"
+                                                            Command="{Binding DataContext.RemoverCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
 
                 <DockPanel Grid.Row="2" Margin="2,10,2,10">
