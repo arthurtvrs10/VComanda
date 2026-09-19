@@ -17,11 +17,17 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-            <Button Content="Criar backup agora" Padding="8,4" Margin="0,0,8,0" Command="{Binding CriarBackupCommand}" />
-            <Button Content="Escolher pasta externa e criar backup..." Padding="8,4" Click="EscolherPastaExterna_Click" />
+            <Button Content="Criar backup agora" Padding="18,0" Height="56" FontSize="16" Margin="0,0,8,0" Command="{Binding CriarBackupCommand}" />
+            <Button Content="Escolher pasta externa e criar backup..." Padding="18,0" Height="56" FontSize="16" Click="EscolherPastaExterna_Click" />
         </StackPanel>
 
         <ListView Grid.Row="1" ItemsSource="{Binding Backups}" SelectedItem="{Binding BackupSelecionado}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="MinHeight" Value="40" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Arquivo" DisplayMemberBinding="{Binding Arquivo}" Width="220" />
@@ -34,8 +40,8 @@
         </ListView>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
-            <Button Content="Restaurar backup selecionado" Padding="8,4" Margin="0,0,8,0" Command="{Binding RestaurarCommand}" />
-            <Button Content="Selecionar arquivo..." Padding="8,4" Click="SelecionarArquivo_Click" />
+            <Button Content="Restaurar backup selecionado" Padding="18,0" Height="56" FontSize="16" Margin="0,0,8,0" Command="{Binding RestaurarCommand}" />
+            <Button Content="Selecionar arquivo..." Padding="18,0" Height="56" FontSize="16" Click="SelecionarArquivo_Click" />
         </StackPanel>
 
         <TextBlock Grid.Row="3" Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" Margin="0,12,0,0" />

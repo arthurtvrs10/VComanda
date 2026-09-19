@@ -7,11 +7,11 @@
         Title="Varthex Comanda" Height="700" Width="1200">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
-            <Button Content="Atendimento" Padding="12,4" Margin="0,0,8,0" Click="MostrarAtendimento_Click" />
-            <Button Content="Produtos" Padding="12,4" Margin="0,0,8,0" Click="MostrarProdutos_Click" />
-            <Button Content="Histórico" Padding="12,4" Margin="0,0,8,0" Click="MostrarHistorico_Click" />
-            <Button Content="Backup" Padding="12,4" Margin="0,0,8,0" Click="MostrarBackup_Click" />
-            <Button Content="Configurações" Padding="12,4" Click="MostrarConfiguracao_Click" />
+            <Button Content="Atendimento" Padding="18,8" FontSize="15" Margin="0,0,8,0" Click="MostrarAtendimento_Click" />
+            <Button Content="Produtos" Padding="18,8" FontSize="15" Margin="0,0,8,0" Click="MostrarProdutos_Click" />
+            <Button Content="Histórico" Padding="18,8" FontSize="15" Margin="0,0,8,0" Click="MostrarHistorico_Click" />
+            <Button Content="Backup" Padding="18,8" FontSize="15" Margin="0,0,8,0" Click="MostrarBackup_Click" />
+            <Button Content="Configurações" Padding="18,8" FontSize="15" Click="MostrarConfiguracao_Click" />
         </StackPanel>
         <ContentControl x:Name="ConteudoPrincipal" />
     </DockPanel>

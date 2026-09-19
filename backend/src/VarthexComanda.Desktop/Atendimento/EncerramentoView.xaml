@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VarthexComanda.Desktop.Atendimento"
         mc:Ignorable="d"
-        Title="Encerrar comanda" Width="480" SizeToContent="Height"
+        Title="Encerrar comanda" Width="560" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.Resources>
         <local:CentavosParaMoedaConverter x:Key="Moeda" />
@@ -13,30 +13,31 @@
     <StackPanel Margin="16">
         <TextBlock Text="{Binding NumeroComanda, StringFormat='Comanda {0}'}" FontWeight="Bold" FontSize="16" Margin="0,0,0,12" />
 
-        <ListView ItemsSource="{Binding Itens}" MaxHeight="240">
+        <ListView ItemsSource="{Binding Itens}" MaxHeight="240" FontSize="14">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Produto" DisplayMemberBinding="{Binding NomeProduto}" Width="160" />
-                    <GridViewColumn Header="Qtd" DisplayMemberBinding="{Binding Quantidade}" Width="50" />
-                    <GridViewColumn Header="Preço unit." DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="90" />
-                    <GridViewColumn Header="Subtotal" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="90" />
+                    <GridViewColumn Header="Produto" DisplayMemberBinding="{Binding NomeProduto}" Width="190" />
+                    <GridViewColumn Header="Qtd" DisplayMemberBinding="{Binding Quantidade}" Width="60" />
+                    <GridViewColumn Header="Preço unit." DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="100" />
+                    <GridViewColumn Header="Subtotal" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="100" />
                 </GridView>
             </ListView.View>
         </ListView>
 
         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-            <TextBlock Text="Total a pagar: " FontWeight="Bold" FontSize="18" />
-            <TextBlock Text="{Binding TotalCentavos, Converter={StaticResource Moeda}}" FontWeight="Bold" FontSize="18" />
+            <TextBlock Text="Total a pagar: " FontWeight="Bold" FontSize="24" />
+            <TextBlock Text="{Binding TotalCentavos, Converter={StaticResource Moeda}}" FontWeight="Bold" FontSize="24" />
         </StackPanel>
-        <TextBlock Text="Digite este valor na maquininha." Margin="0,4,0,12" TextWrapping="Wrap" />
+        <TextBlock Text="Digite este valor na maquininha." Margin="0,4,0,16" TextWrapping="Wrap" FontSize="14" />
 
-        <CheckBox Content="A cobrança foi aprovada fora do sistema?" IsChecked="{Binding CobrancaAprovada}" Margin="0,0,0,12" />
+        <CheckBox Content="A cobrança foi aprovada fora do sistema?" IsChecked="{Binding CobrancaAprovada}" FontSize="16" Margin="0,0,0,16" />
 
         <TextBlock Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" Margin="0,0,0,12" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Voltar para a comanda" Command="{Binding VoltarCommand}" Margin="0,0,8,0" />
-            <Button Content="Confirmar e encerrar" Command="{Binding ConfirmarEncerrarCommand}" FontWeight="Bold" />
+            <Button Content="Voltar para a comanda" Command="{Binding VoltarCommand}" Height="56" FontSize="16" Padding="18,0" Margin="0,0,8,0" />
+            <Button Content="Confirmar e encerrar" Command="{Binding ConfirmarEncerrarCommand}" Height="56" FontSize="16" Padding="18,0"
+                    Background="#3F8F5F" Foreground="White" FontWeight="Bold" />
         </StackPanel>
     </StackPanel>
 </Window>

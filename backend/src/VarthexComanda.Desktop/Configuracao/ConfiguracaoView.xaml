@@ -13,24 +13,24 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock Text="Nome do estabelecimento:" Width="180" VerticalAlignment="Center" />
-            <TextBox Width="240" Text="{Binding NomeEstabelecimento, UpdateSourceTrigger=PropertyChanged}" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="Nome do estabelecimento:" Width="220" FontSize="14" VerticalAlignment="Center" />
+            <TextBox Width="320" Text="{Binding NomeEstabelecimento, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock Text="Quantidade de comandas:" Width="180" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="Quantidade de comandas:" Width="220" FontSize="14" VerticalAlignment="Center" />
             <TextBox Width="100" Text="{Binding QuantidadeComandasTexto, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock Text="Pasta de backup externa:" Width="180" VerticalAlignment="Center" />
-            <TextBox Width="240" Text="{Binding PastaBackupExterna}" IsReadOnly="True" Margin="0,0,8,0" />
-            <Button Content="Escolher..." Padding="8,4" Margin="0,0,8,0" Click="EscolherPasta_Click" />
-            <Button Content="Limpar" Padding="8,4" Click="LimparPasta_Click" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="Pasta de backup externa:" Width="220" FontSize="14" VerticalAlignment="Center" />
+            <TextBox Width="320" Text="{Binding PastaBackupExterna}" IsReadOnly="True" Margin="0,0,8,0" />
+            <Button Content="Escolher..." Padding="16,8" Margin="0,0,8,0" Click="EscolherPasta_Click" />
+            <Button Content="Limpar" Padding="16,8" Click="LimparPasta_Click" />
         </StackPanel>
 
-        <Button Grid.Row="3" Content="Salvar" Padding="12,4" HorizontalAlignment="Left" Command="{Binding SalvarCommand}" Margin="0,4,0,8" />
+        <Button Grid.Row="3" Content="Salvar" Padding="28,0" Height="56" FontSize="16" HorizontalAlignment="Left" Command="{Binding SalvarCommand}" Margin="0,8,0,12" />
 
         <TextBlock Grid.Row="4" Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" />
     </Grid>

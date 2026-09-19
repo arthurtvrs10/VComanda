@@ -26,16 +26,22 @@
 
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
             <TextBlock Text="Categoria:" VerticalAlignment="Center" Margin="0,0,4,0" />
-            <ComboBox Width="180" ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
+            <ComboBox Width="160" ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
                       SelectedItem="{Binding CategoriaFiltro}" Margin="0,0,12,0" />
             <Button Content="Limpar filtro" Command="{Binding LimparFiltroCommand}" Margin="0,0,12,0" />
             <TextBlock Text="Buscar:" VerticalAlignment="Center" Margin="0,0,4,0" />
-            <TextBox Width="220" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Width="190" Text="{Binding TextoBusca, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
         <ListView Grid.Row="1" Grid.Column="0"
                   ItemsSource="{Binding Produtos}"
                   SelectedItem="{Binding ProdutoSelecionado}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="MinHeight" Value="40" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="260" />
@@ -67,8 +73,8 @@
                                 <Image Source="{Binding FotoPendenteCaminho, Converter={StaticResource CaminhoImagem}}" Stretch="UniformToFill" />
                             </Grid>
                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Top">
-                                <Button Content="Escolher foto..." Click="EscolherFoto_Click" Padding="8,2" Margin="0,0,0,6" />
-                                <Button Content="Remover foto" Command="{Binding RemoverFotoCommand}" Padding="8,2" Margin="0,0,0,6" />
+                                <Button Content="Escolher foto..." Click="EscolherFoto_Click" Padding="12,6" Margin="0,0,0,6" />
+                                <Button Content="Remover foto" Command="{Binding RemoverFotoCommand}" Padding="12,6" Margin="0,0,0,6" />
                                 <TextBlock Text="JPG, PNG ou BMP · até 10 MB" FontSize="11" Foreground="#6B6B67" />
                             </StackPanel>
                         </StackPanel>
@@ -98,19 +104,19 @@
                 <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Foreground="#B23B32" TextWrapping="Wrap" Margin="0,8,0,0" />
 
                 <DockPanel Grid.Row="3" Margin="0,12,0,0">
-                    <Button DockPanel.Dock="Right" Content="Cadastrar produto" Padding="20,0" Height="52"
+                    <Button DockPanel.Dock="Right" Content="Cadastrar produto" Padding="20,0" Height="60" FontSize="16"
                             Background="#3F8F5F" Foreground="White" FontWeight="Bold"
                             Command="{Binding SalvarCommand}"
                             Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeNovo}}" />
-                    <Button DockPanel.Dock="Right" Content="Salvar" Padding="20,0" Height="52"
+                    <Button DockPanel.Dock="Right" Content="Salvar" Padding="20,0" Height="60" FontSize="16"
                             Background="#3F8F5F" Foreground="White" FontWeight="Bold"
                             Command="{Binding SalvarCommand}"
                             Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeEdicao}}" />
                     <StackPanel Orientation="Horizontal"
                                 Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeEdicao}}">
-                        <Button Content="Novo produto" Padding="16,0" Height="52"
+                        <Button Content="Novo produto" Padding="16,0" Height="60" FontSize="16"
                                 Command="{Binding NovoCommand}" Margin="0,0,8,0" />
-                        <Button Content="Desativar" Padding="16,0" Height="52" Foreground="#B23B32"
+                        <Button Content="Desativar" Padding="16,0" Height="60" FontSize="16" Foreground="#B23B32"
                                 Command="{Binding DesativarCommand}" />
                     </StackPanel>
                 </DockPanel>

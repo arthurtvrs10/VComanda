@@ -145,7 +145,7 @@
                 </ScrollViewer>
 
                 <DockPanel Grid.Row="2" Margin="0,8,0,0">
-                    <Button DockPanel.Dock="Left" Content="Todas" Width="70" Height="40" Margin="0,0,6,0" Padding="4" FontSize="11.5"
+                    <Button DockPanel.Dock="Left" Content="Todas" Width="76" Height="48" Margin="0,0,6,0" Padding="4" FontSize="13"
                             Command="{Binding LimparFiltroCommand}">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -168,7 +168,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Height="40" Margin="0,0,6,0" Padding="4"
+                                <Button Height="48" Margin="0,0,6,0" Padding="4"
                                         Command="{Binding DataContext.SelecionarCategoriaCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}">
                                     <Button.Background>
@@ -182,7 +182,7 @@
                                             <Setter Property="BorderBrush" Value="#C4C4C4" />
                                             <Setter Property="BorderThickness" Value="1" />
                                             <Setter Property="Content" Value="{Binding Nome}" />
-                                            <Setter Property="FontSize" Value="11.5" />
+                                            <Setter Property="FontSize" Value="13" />
                                         </Style>
                                     </Button.Style>
                                 </Button>
@@ -205,24 +205,24 @@
                            Text="{Binding ComandaAtual.Numero, StringFormat='COMANDA #{0}'}" />
 
                 <Border Grid.Row="1" BorderBrush="#C4C4C4" BorderThickness="1">
-                    <ListView ItemsSource="{Binding Itens}" BorderThickness="0">
+                    <ListView ItemsSource="{Binding Itens}" BorderThickness="0" FontSize="14">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="DESCRIÇÃO" DisplayMemberBinding="{Binding NomeProduto}" Width="180" />
-                                <GridViewColumn Header="QTD." DisplayMemberBinding="{Binding Quantidade}" Width="50" />
-                                <GridViewColumn Header="PREÇO" DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="80" />
-                                <GridViewColumn Header="TOTAL" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="80" />
-                                <GridViewColumn Width="130">
+                                <GridViewColumn Header="DESCRIÇÃO" DisplayMemberBinding="{Binding NomeProduto}" Width="150" />
+                                <GridViewColumn Header="QTD." DisplayMemberBinding="{Binding Quantidade}" Width="46" />
+                                <GridViewColumn Header="PREÇO" DisplayMemberBinding="{Binding PrecoUnitarioCentavos, Converter={StaticResource Moeda}}" Width="76" />
+                                <GridViewColumn Header="TOTAL" DisplayMemberBinding="{Binding SubtotalCentavos, Converter={StaticResource Moeda}}" Width="76" />
+                                <GridViewColumn Width="186">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <Button Content="−" Width="24"
+                                                <Button Content="−" Width="44" Height="44" FontSize="20" FontWeight="Bold"
                                                         Command="{Binding DataContext.DiminuirQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
                                                         CommandParameter="{Binding}" Margin="0,0,4,0" />
-                                                <Button Content="+" Width="24"
+                                                <Button Content="+" Width="44" Height="44" FontSize="20" FontWeight="Bold"
                                                         Command="{Binding DataContext.AumentarQuantidadeCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
                                                         CommandParameter="{Binding}" Margin="0,0,4,0" />
-                                                <Button Content="Excluir" Foreground="#B23B32"
+                                                <Button Content="Excluir" Foreground="#B23B32" MinHeight="44"
                                                         Command="{Binding DataContext.RemoverCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
                                                         CommandParameter="{Binding}" />
                                             </StackPanel>
@@ -237,17 +237,17 @@
                 <DockPanel Grid.Row="2" Margin="2,10,2,10">
                     <TextBlock Text="TOTAL DA COMANDA" FontWeight="Bold" FontSize="12" Foreground="#4A4A47" VerticalAlignment="Bottom" />
                     <TextBlock Text="{Binding ComandaAtual.TotalCentavos, Converter={StaticResource Moeda}}"
-                               FontWeight="Bold" FontSize="22" DockPanel.Dock="Right" HorizontalAlignment="Right" />
+                               FontWeight="Bold" FontSize="24" DockPanel.Dock="Right" HorizontalAlignment="Right" />
                 </DockPanel>
 
                 <DockPanel Grid.Row="3">
-                    <Button DockPanel.Dock="Right" Content="Finalizar comanda (F4)" Padding="20,0" Height="52"
+                    <Button DockPanel.Dock="Right" Content="Finalizar comanda (F4)" Padding="20,0" Height="60" FontSize="16"
                             Background="#3F8F5F" Foreground="White" FontWeight="Bold"
                             Command="{Binding VerTotalCommand}" />
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Voltar" Padding="16,0" Height="52"
+                        <Button Content="Voltar" Padding="16,0" Height="60" FontSize="16"
                                 Command="{Binding FecharEdicaoCommand}" Margin="0,0,8,0" />
-                        <Button Content="Cancelar comanda" Padding="16,0" Height="52" Foreground="#B23B32"
+                        <Button Content="Cancelar comanda" Padding="16,0" Height="60" FontSize="16" Foreground="#B23B32"
                                 Command="{Binding CancelarComandaAtualCommand}" />
                     </StackPanel>
                 </DockPanel>
