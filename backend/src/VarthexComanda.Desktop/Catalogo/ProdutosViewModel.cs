@@ -57,9 +57,16 @@ public partial class ProdutosViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TemProdutoSelecionado))]
+    [NotifyPropertyChangedFor(nameof(TituloFormulario))]
     private Produto? produtoSelecionado;
 
     public bool TemProdutoSelecionado => ProdutoSelecionado is not null;
+
+    public string TituloFormulario => ProdutoSelecionado is null ? "NOVO PRODUTO" : "EDITAR PRODUTO";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RemoverFotoCommand))]
+    private string? fotoPendenteCaminho;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RemoverFotoCommand))]
@@ -96,6 +103,7 @@ public partial class ProdutosViewModel : ObservableObject
             PrecoProdutoReais = string.Empty;
             ProdutoAtivo = true;
             FotoArquivoAtual = null;
+            FotoPendenteCaminho = null;
             Mensagem = string.Empty;
             return;
         }
@@ -105,6 +113,7 @@ public partial class ProdutosViewModel : ObservableObject
         PrecoProdutoReais = (value.PrecoCentavos / 100m).ToString("0.00", CulturaMoeda);
         ProdutoAtivo = value.Ativo;
         FotoArquivoAtual = value?.FotoArquivo;
+        FotoPendenteCaminho = null;
         Mensagem = string.Empty;
     }
 
@@ -133,6 +142,7 @@ public partial class ProdutosViewModel : ObservableObject
         CategoriaProduto = null;
         PrecoProdutoReais = string.Empty;
         ProdutoAtivo = true;
+        FotoPendenteCaminho = null;
         Mensagem = string.Empty;
     }
 
@@ -150,6 +160,8 @@ public partial class ProdutosViewModel : ObservableObject
             return;
         }
 
+        var criando = ProdutoSelecionado is null;
+
         try
         {
             var resultado = ProdutoSelecionado is null
@@ -160,6 +172,33 @@ public partial class ProdutosViewModel : ObservableObject
             {
                 Mensagem = string.Join(" ", resultado.Erros);
                 return;
+            }
+
+            if (criando && FotoPendenteCaminho is not null)
+            {
+                var criado = resultado.Valor!;
+                string? falhaFoto = null;
+                try
+                {
+                    var resultadoFoto = _definirFotoProduto.Executar(criado.Id, FotoPendenteCaminho);
+                    if (!resultadoFoto.Sucesso)
+                    {
+                        falhaFoto = "Produto cadastrado, mas a foto não foi adicionada: " + string.Join(" ", resultadoFoto.Erros);
+                    }
+                }
+                catch (Exception)
+                {
+                    falhaFoto = "Produto cadastrado, mas não foi possível salvar a foto. Tente novamente.";
+                }
+
+                if (falhaFoto is not null)
+                {
+                    // O produto continua cadastrado: seleciona-o para o usuario tentar a foto de novo.
+                    Pesquisar();
+                    ProdutoSelecionado = Produtos.FirstOrDefault(p => p.Id == criado.Id);
+                    Mensagem = falhaFoto;
+                    return;
+                }
             }
 
             Novo();
@@ -202,7 +241,8 @@ public partial class ProdutosViewModel : ObservableObject
     {
         if (ProdutoSelecionado is null)
         {
-            Mensagem = "Selecione um produto para definir a foto.";
+            FotoPendenteCaminho = caminhoOrigem;
+            Mensagem = string.Empty;
             return;
         }
 
@@ -230,6 +270,7 @@ public partial class ProdutosViewModel : ObservableObject
     {
         if (ProdutoSelecionado is null)
         {
+            FotoPendenteCaminho = null;
             return;
         }
 
@@ -252,7 +293,7 @@ public partial class ProdutosViewModel : ObservableObject
         }
     }
 
-    private bool PodeRemoverFoto() => FotoArquivoAtual is not null;
+    private bool PodeRemoverFoto() => FotoArquivoAtual is not null || FotoPendenteCaminho is not null;
 
     [RelayCommand]
     private void AdicionarCategoria()

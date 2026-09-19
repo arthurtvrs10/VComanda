@@ -22,6 +22,11 @@ public class FotoArquivoParaImagemConverter : IValueConverter
             return null;
         }
 
+        return CarregarImagem(caminho);
+    }
+
+    public static BitmapImage? CarregarImagem(string caminho)
+    {
         try
         {
             var imagem = new BitmapImage();

@@ -74,13 +74,14 @@ public class ProdutosViewModelTests
     }
 
     [Fact]
-    public void DefinirFoto_SemProdutoSelecionado_MostraMensagem()
+    public void DefinirFoto_SemProdutoSelecionado_GuardaCaminhoPendente()
     {
         var viewModel = CriarViewModel(new FakeCategoriaRepository(), new FakeProdutoRepository());
 
         viewModel.DefinirFoto("C:\\foto.jpg");
 
-        Assert.Equal("Selecione um produto para definir a foto.", viewModel.Mensagem);
+        Assert.Equal("C:\\foto.jpg", viewModel.FotoPendenteCaminho);
+        Assert.Equal(string.Empty, viewModel.Mensagem);
         Assert.Null(viewModel.FotoArquivoAtual);
     }
 
@@ -140,5 +141,96 @@ public class ProdutosViewModelTests
 
         Assert.Null(viewModel.FotoArquivoAtual);
         Assert.False(viewModel.TemProdutoSelecionado);
+    }
+
+    private static (ProdutosViewModel ViewModel, FakeProdutoRepository Produtos, FakeFotoStorage Fotos) CriarComFormularioNovoPreenchido()
+    {
+        var categorias = new FakeCategoriaRepository();
+        new CadastrarCategoria(categorias, new FakeClock()).Executar("Bebidas");
+        var produtos = new FakeProdutoRepository();
+        var fotos = new FakeFotoStorage();
+        var viewModel = CriarViewModel(categorias, produtos, fotos);
+        viewModel.NomeProduto = "Refrigerante";
+        viewModel.CategoriaProduto = viewModel.Categorias[0];
+        viewModel.PrecoProdutoReais = "5,00";
+        return (viewModel, produtos, fotos);
+    }
+
+    [Fact]
+    public void Cadastrar_ComFotoPendente_GravaAFotoNoProdutoCriadoELimpaOFormulario()
+    {
+        var (viewModel, produtos, _) = CriarComFormularioNovoPreenchido();
+        viewModel.DefinirFoto("C:\\foto.jpg");
+
+        viewModel.SalvarCommand.Execute(null);
+
+        var criado = Assert.Single(produtos.Pesquisar(null, null));
+        Assert.Equal("foto1.jpg", criado.FotoArquivo);
+        Assert.Null(viewModel.ProdutoSelecionado);
+        Assert.Null(viewModel.FotoPendenteCaminho);
+    }
+
+    [Fact]
+    public void Cadastrar_FotoRejeitada_ProdutoFicaCadastradoESelecionadoComMensagem()
+    {
+        var (viewModel, produtos, fotos) = CriarComFormularioNovoPreenchido();
+        fotos.MensagemRejeicao = "Formato não suportado. Use JPG, PNG ou BMP.";
+        viewModel.DefinirFoto("C:\\documento.pdf");
+
+        viewModel.SalvarCommand.Execute(null);
+
+        var criado = Assert.Single(produtos.Pesquisar(null, null));
+        Assert.NotNull(viewModel.ProdutoSelecionado);
+        Assert.Equal(criado.Id, viewModel.ProdutoSelecionado!.Id);
+        Assert.Equal("EDITAR PRODUTO", viewModel.TituloFormulario);
+        Assert.Contains("Produto cadastrado, mas a foto não foi adicionada", viewModel.Mensagem);
+        Assert.Contains("Formato não suportado. Use JPG, PNG ou BMP.", viewModel.Mensagem);
+    }
+
+    [Fact]
+    public void RemoverFoto_ComFotoPendente_LimpaOPendente()
+    {
+        var viewModel = CriarViewModel(new FakeCategoriaRepository(), new FakeProdutoRepository());
+        viewModel.DefinirFoto("C:\\foto.jpg");
+
+        viewModel.RemoverFotoCommand.Execute(null);
+
+        Assert.Null(viewModel.FotoPendenteCaminho);
+    }
+
+    [Fact]
+    public void RemoverFotoCommand_ComFotoPendente_FicaHabilitado()
+    {
+        var viewModel = CriarViewModel(new FakeCategoriaRepository(), new FakeProdutoRepository());
+        Assert.False(viewModel.RemoverFotoCommand.CanExecute(null));
+
+        viewModel.DefinirFoto("C:\\foto.jpg");
+
+        Assert.True(viewModel.RemoverFotoCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void SelecionarProduto_DescartaFotoPendente()
+    {
+        var (viewModel, _, produto) = CriarComProdutoSelecionado();
+        viewModel.ProdutoSelecionado = null;
+        viewModel.DefinirFoto("C:\\foto.jpg");
+        Assert.NotNull(viewModel.FotoPendenteCaminho);
+
+        viewModel.ProdutoSelecionado = produto;
+
+        Assert.Null(viewModel.FotoPendenteCaminho);
+    }
+
+    [Fact]
+    public void TituloFormulario_AcompanhaOModo()
+    {
+        var (viewModel, _, produto) = CriarComProdutoSelecionado();
+        viewModel.ProdutoSelecionado = null;
+        Assert.Equal("NOVO PRODUTO", viewModel.TituloFormulario);
+
+        viewModel.ProdutoSelecionado = produto;
+
+        Assert.Equal("EDITAR PRODUTO", viewModel.TituloFormulario);
     }
 }

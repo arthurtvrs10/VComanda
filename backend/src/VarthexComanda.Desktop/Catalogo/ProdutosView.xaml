@@ -4,9 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:VarthexComanda.Desktop.Catalogo"
+             xmlns:atendimento="clr-namespace:VarthexComanda.Desktop.Atendimento"
              mc:Ignorable="d">
     <UserControl.Resources>
         <local:FotoArquivoParaImagemConverter x:Key="FotoImagem" />
+        <local:CaminhoArquivoParaImagemConverter x:Key="CaminhoImagem" />
+        <atendimento:CentavosParaMoedaConverter x:Key="Moeda" />
+        <atendimento:NuloParaVisibilidadeConverter x:Key="VisivelSeEdicao" />
+        <atendimento:NuloParaVisibilidadeInversoConverter x:Key="VisivelSeNovo" />
     </UserControl.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -14,9 +19,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*" />
             <ColumnDefinition Width="16" />
-            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
@@ -34,60 +39,82 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="260" />
-                    <GridViewColumn Header="Preço (centavos)" DisplayMemberBinding="{Binding PrecoCentavos}" Width="140" />
+                    <GridViewColumn Header="Preço" DisplayMemberBinding="{Binding PrecoCentavos, Converter={StaticResource Moeda}}" Width="110" />
                     <GridViewColumn Header="Ativo" DisplayMemberBinding="{Binding Ativo}" Width="80" />
                 </GridView>
             </ListView.View>
         </ListView>
 
-        <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
-            <TextBlock Text="Nome do produto" />
-            <TextBox Text="{Binding NomeProduto, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+        <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                BorderBrush="#C4C4C4" BorderThickness="1" Background="White" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-            <TextBlock Text="Categoria" />
-            <ComboBox ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
-                      SelectedItem="{Binding CategoriaProduto}" Margin="0,0,0,8" />
+                <TextBlock Grid.Row="0" Text="{Binding TituloFormulario}" FontWeight="Bold" FontSize="14"
+                           Foreground="#23252A" Margin="0,0,0,12" />
 
-            <TextBlock Text="Preço (R$)" />
-            <TextBox Text="{Binding PrecoProdutoReais, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="FOTO" FontWeight="Bold" FontSize="12" Foreground="#4A4A47" Margin="0,0,0,4" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <Grid Width="140" Height="140" Background="#EDEDEA" ClipToBounds="True">
+                                <Image Source="{Binding FotoArquivoAtual, Converter={StaticResource FotoImagem}}" Stretch="UniformToFill" />
+                                <Image Source="{Binding FotoPendenteCaminho, Converter={StaticResource CaminhoImagem}}" Stretch="UniformToFill" />
+                            </Grid>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Top">
+                                <Button Content="Escolher foto..." Click="EscolherFoto_Click" Padding="8,2" Margin="0,0,0,6" />
+                                <Button Content="Remover foto" Command="{Binding RemoverFotoCommand}" Padding="8,2" Margin="0,0,0,6" />
+                                <TextBlock Text="JPG, PNG ou BMP · até 10 MB" FontSize="11" Foreground="#6B6B67" />
+                            </StackPanel>
+                        </StackPanel>
 
-            <CheckBox Content="Ativo" IsChecked="{Binding ProdutoAtivo}" Margin="0,0,0,8" />
+                        <TextBlock Text="NOME DO PRODUTO" FontWeight="Bold" FontSize="12" Foreground="#4A4A47" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding NomeProduto, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
 
-            <TextBlock Text="Foto" Margin="0,8,0,2" />
-            <Grid Width="120" Height="120" HorizontalAlignment="Left" Background="#EDEDEA" ClipToBounds="True">
-                <Image Source="{Binding FotoArquivoAtual, Converter={StaticResource FotoImagem}}" Stretch="UniformToFill" />
+                        <TextBlock Text="CATEGORIA" FontWeight="Bold" FontSize="12" Foreground="#4A4A47" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding Categorias}" DisplayMemberPath="Nome"
+                                  SelectedItem="{Binding CategoriaProduto}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="PREÇO (R$)" FontWeight="Bold" FontSize="12" Foreground="#4A4A47" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding PrecoProdutoReais, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+
+                        <CheckBox Content="Ativo" IsChecked="{Binding ProdutoAtivo}" Margin="0,0,0,12"
+                                  Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeEdicao}}" />
+
+                        <Expander Header="Nova categoria">
+                            <StackPanel Margin="0,8,0,0">
+                                <TextBox Text="{Binding NovaCategoriaNome, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+                                <Button Content="Adicionar categoria" Command="{Binding AdicionarCategoriaCommand}" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <TextBlock Grid.Row="2" Text="{Binding Mensagem}" Foreground="#B23B32" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+                <DockPanel Grid.Row="3" Margin="0,12,0,0">
+                    <Button DockPanel.Dock="Right" Content="Cadastrar produto" Padding="20,0" Height="52"
+                            Background="#3F8F5F" Foreground="White" FontWeight="Bold"
+                            Command="{Binding SalvarCommand}"
+                            Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeNovo}}" />
+                    <Button DockPanel.Dock="Right" Content="Salvar" Padding="20,0" Height="52"
+                            Background="#3F8F5F" Foreground="White" FontWeight="Bold"
+                            Command="{Binding SalvarCommand}"
+                            Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeEdicao}}" />
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ProdutoSelecionado, Converter={StaticResource VisivelSeEdicao}}">
+                        <Button Content="Novo produto" Padding="16,0" Height="52"
+                                Command="{Binding NovoCommand}" Margin="0,0,8,0" />
+                        <Button Content="Desativar" Padding="16,0" Height="52" Foreground="#B23B32"
+                                Command="{Binding DesativarCommand}" />
+                    </StackPanel>
+                </DockPanel>
             </Grid>
-            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                <Button Content="Escolher foto..." Click="EscolherFoto_Click"
-                        IsEnabled="{Binding TemProdutoSelecionado}" Margin="0,0,8,0" Padding="8,2" />
-                <Button Content="Remover foto" Command="{Binding RemoverFotoCommand}" Padding="8,2" />
-            </StackPanel>
-            <TextBlock Text="Salve o produto e selecione-o na lista para adicionar uma foto."
-                       FontSize="11" Foreground="#6B6B67" TextWrapping="Wrap" Margin="0,4,0,8">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding TemProdutoSelecionado}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                <Button Content="Novo" Command="{Binding NovoCommand}" Margin="0,0,8,0" />
-                <Button Content="Salvar" Command="{Binding SalvarCommand}" Margin="0,0,8,0" />
-                <Button Content="Desativar" Command="{Binding DesativarCommand}" />
-            </StackPanel>
-
-            <Separator Margin="0,8,0,8" />
-
-            <TextBlock Text="Nova categoria" />
-            <TextBox Text="{Binding NovaCategoriaNome, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
-            <Button Content="Adicionar categoria" Command="{Binding AdicionarCategoriaCommand}" HorizontalAlignment="Left" />
-
-            <TextBlock Text="{Binding Mensagem}" Foreground="Red" TextWrapping="Wrap" Margin="0,12,0,0" />
-        </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

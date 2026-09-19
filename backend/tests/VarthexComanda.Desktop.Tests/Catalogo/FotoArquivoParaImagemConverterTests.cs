@@ -83,4 +83,53 @@ public class FotoArquivoParaImagemConverterTests : IDisposable
         var excecao = Record.Exception(() => File.Delete(caminho));
         Assert.Null(excecao);
     }
+
+    private static object? ConverterCaminho(object? valor) =>
+        new CaminhoArquivoParaImagemConverter().Convert(valor, typeof(System.Windows.Media.ImageSource), null!, CultureInfo.InvariantCulture);
+
+    [Fact]
+    public void Caminho_NuloOuVazio_RetornaNulo()
+    {
+        Assert.Null(ConverterCaminho(null));
+        Assert.Null(ConverterCaminho(string.Empty));
+        Assert.Null(ConverterCaminho("   "));
+    }
+
+    [Fact]
+    public void Caminho_ArquivoInexistente_RetornaNulo()
+    {
+        Assert.Null(ConverterCaminho(Path.Combine(_pasta, "nao-existe.png")));
+    }
+
+    [Fact]
+    public void Caminho_ArquivoCorrompido_RetornaNulo()
+    {
+        var caminho = Path.Combine(_pasta, "quebrada.png");
+        File.WriteAllBytes(caminho, new byte[] { 1, 2, 3, 4 });
+
+        Assert.Null(ConverterCaminho(caminho));
+    }
+
+    [Fact]
+    public void Caminho_ImagemValida_RetornaBitmapCongelado()
+    {
+        var caminho = Path.Combine(_pasta, "ok.png");
+        File.WriteAllBytes(caminho, System.Convert.FromBase64String(PngUmPixelBase64));
+
+        var imagem = Assert.IsType<BitmapImage>(ConverterCaminho(caminho));
+
+        Assert.True(imagem.IsFrozen);
+    }
+
+    [Fact]
+    public void Caminho_ImagemValida_NaoTravaOArquivo()
+    {
+        var caminho = Path.Combine(_pasta, "livre.png");
+        File.WriteAllBytes(caminho, System.Convert.FromBase64String(PngUmPixelBase64));
+
+        ConverterCaminho(caminho);
+
+        var excecao = Record.Exception(() => File.Delete(caminho));
+        Assert.Null(excecao);
+    }
 }
