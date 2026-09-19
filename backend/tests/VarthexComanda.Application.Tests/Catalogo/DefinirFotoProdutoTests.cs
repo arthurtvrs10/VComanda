@@ -86,16 +86,17 @@ public class DefinirFotoProdutoTests
         Assert.Equal(new[] { "foto1.jpg" }, fotos.Excluidos);
     }
 
-    private sealed class RepositorioQueFalhaAoSalvar : IProdutoRepository
+    [Fact]
+    public void Executar_ProdutoJaTemFotoEFalhaAoSalvar_NaoExcluiOArquivoAntigo()
     {
-        private readonly FakeProdutoRepository _interno;
+        var (produtos, produto) = CriarProduto();
+        var fotos = new FakeFotoStorage();
+        new DefinirFotoProduto(produtos, fotos, new FakeClock()).Executar(produto.Id, "C:\\primeira.jpg");
+        var caso = new DefinirFotoProduto(new RepositorioQueFalhaAoSalvar(produtos), fotos, new FakeClock());
 
-        public RepositorioQueFalhaAoSalvar(FakeProdutoRepository interno) => _interno = interno;
+        Assert.Throws<InvalidOperationException>(() => caso.Executar(produto.Id, "C:\\segunda.jpg"));
 
-        public Produto? BuscarPorId(int id) => _interno.BuscarPorId(id);
-
-        public IReadOnlyList<Produto> Pesquisar(int? categoriaId, string? texto) => _interno.Pesquisar(categoriaId, texto);
-
-        public Produto Salvar(Produto produto) => throw new InvalidOperationException("falha simulada");
+        Assert.Equal(new[] { "foto2.jpg" }, fotos.Excluidos);
+        Assert.DoesNotContain("foto1.jpg", fotos.Excluidos);
     }
 }

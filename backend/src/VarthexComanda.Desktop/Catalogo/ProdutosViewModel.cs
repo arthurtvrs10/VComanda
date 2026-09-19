@@ -95,7 +95,7 @@ public partial class ProdutosViewModel : ObservableObject
             CategoriaProduto = null;
             PrecoProdutoReais = string.Empty;
             ProdutoAtivo = true;
-            FotoArquivoAtual = value?.FotoArquivo;
+            FotoArquivoAtual = null;
             Mensagem = string.Empty;
             return;
         }

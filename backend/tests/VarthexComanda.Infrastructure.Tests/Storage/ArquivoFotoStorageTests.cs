@@ -28,9 +28,21 @@ public class ArquivoFotoStorageTests : IDisposable
     private string CriarArquivoOrigem(string nome, int bytes = 16)
     {
         var caminho = Path.Combine(_raiz, nome);
-        File.WriteAllBytes(caminho, new byte[bytes]);
+        var cabecalho = Path.GetExtension(nome).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => new byte[] { 0xFF, 0xD8, 0xFF },
+            ".png" => new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A },
+            ".bmp" => new byte[] { 0x42, 0x4D },
+            _ => Array.Empty<byte>(),
+        };
+        var conteudo = new byte[Math.Max(bytes, cabecalho.Length)];
+        cabecalho.CopyTo(conteudo, 0);
+        File.WriteAllBytes(caminho, conteudo);
         return caminho;
     }
+
+    private string[] ArquivosNaPastaDeFotos() =>
+        Directory.Exists(_paths.FotosDirectory) ? Directory.GetFiles(_paths.FotosDirectory) : Array.Empty<string>();
 
     [Fact]
     public void Importar_ArquivoValido_CopiaParaPastaDeFotosERetornaNome()
@@ -95,7 +107,50 @@ public class ArquivoFotoStorageTests : IDisposable
         var storage = new ArquivoFotoStorage(_paths, _logger, tamanhoMaximoBytes: 8);
         var origem = CriarArquivoOrigem("grande.png", bytes: 16);
 
-        Assert.Throws<FotoInvalidaException>(() => storage.Importar(origem));
+        var excecao = Assert.Throws<FotoInvalidaException>(() => storage.Importar(origem));
+
+        Assert.Contains("excede o tamanho máximo", excecao.Message);
+    }
+
+    [Fact]
+    public void Importar_ArquivoComConteudoQueNaoEImagem_LancaFotoInvalidaSemCopiar()
+    {
+        var storage = new ArquivoFotoStorage(_paths, _logger);
+        var origem = Path.Combine(_raiz, "falsa.png");
+        File.WriteAllBytes(origem, new byte[] { 1, 2, 3, 4 });
+        var antes = ArquivosNaPastaDeFotos();
+
+        var excecao = Assert.Throws<FotoInvalidaException>(() => storage.Importar(origem));
+
+        Assert.Equal("Não foi possível ler a imagem. Escolha outro arquivo.", excecao.Message);
+        Assert.Equal(antes, ArquivosNaPastaDeFotos());
+    }
+
+    [Fact]
+    public void Importar_ArquivoVazio_LancaFotoInvalida()
+    {
+        var storage = new ArquivoFotoStorage(_paths, _logger);
+        var origem = Path.Combine(_raiz, "vazia.jpg");
+        File.WriteAllBytes(origem, Array.Empty<byte>());
+
+        var excecao = Assert.Throws<FotoInvalidaException>(() => storage.Importar(origem));
+
+        Assert.Equal("Não foi possível ler a imagem. Escolha outro arquivo.", excecao.Message);
+        Assert.Empty(ArquivosNaPastaDeFotos());
+    }
+
+    [Theory]
+    [InlineData("foto.jpeg", ".jpeg")]
+    [InlineData("foto.bmp", ".bmp")]
+    public void Importar_ArquivoJpegEBmpValidos_Aceita(string nomeOrigem, string extensaoEsperada)
+    {
+        var storage = new ArquivoFotoStorage(_paths, _logger);
+        var origem = CriarArquivoOrigem(nomeOrigem);
+
+        var nome = storage.Importar(origem);
+
+        Assert.EndsWith(extensaoEsperada, nome);
+        Assert.True(File.Exists(Path.Combine(_paths.FotosDirectory, nome)));
     }
 
     [Fact]

@@ -71,6 +71,7 @@ Não existe entidade de pagamento no MVP.
 | nome | TEXT | Sim | Nome visível |
 | preco_centavos | INTEGER | Sim | Maior que zero |
 | ativo | INTEGER | Sim | `0` ou `1` |
+| foto_arquivo | TEXT | Não | Nome do arquivo da foto; guarda só o nome (nunca o caminho absoluto), resolvido contra a pasta de fotos do app |
 | criado_em | TEXT | Sim | Data de criação |
 | atualizado_em | TEXT | Sim | Última alteração |
 

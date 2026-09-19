@@ -27,7 +27,6 @@ public class FotoArquivoParaImagemConverter : IValueConverter
             var imagem = new BitmapImage();
             imagem.BeginInit();
             imagem.CacheOption = BitmapCacheOption.OnLoad;
-            imagem.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             imagem.DecodePixelWidth = 320;
             imagem.UriSource = new Uri(caminho, UriKind.Absolute);
             imagem.EndInit();

@@ -55,4 +55,17 @@ public class RemoverFotoProdutoTests
         Assert.Null(produtos.BuscarPorId(produto.Id)!.FotoArquivo);
         Assert.Equal(new[] { "foto1.jpg" }, fotos.Excluidos);
     }
+
+    [Fact]
+    public void Executar_FalhaAoSalvar_NaoExcluiOArquivoEPropagaAExcecao()
+    {
+        var (produtos, produto) = CriarProduto();
+        var fotos = new FakeFotoStorage();
+        new DefinirFotoProduto(produtos, fotos, new FakeClock()).Executar(produto.Id, "C:\\foto.jpg");
+        var caso = new RemoverFotoProduto(new RepositorioQueFalhaAoSalvar(produtos), fotos, new FakeClock());
+
+        Assert.Throws<InvalidOperationException>(() => caso.Executar(produto.Id));
+
+        Assert.Empty(fotos.Excluidos);
+    }
 }

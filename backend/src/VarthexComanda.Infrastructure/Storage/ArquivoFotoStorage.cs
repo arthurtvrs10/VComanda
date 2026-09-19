@@ -41,10 +41,26 @@ public class ArquivoFotoStorage : IFotoStorage
             throw new FotoInvalidaException($"A imagem excede o tamanho máximo de {megabytes} MB.");
         }
 
+        if (!TemCabecalhoDeImagem(caminhoOrigem))
+        {
+            throw new FotoInvalidaException("Não foi possível ler a imagem. Escolha outro arquivo.");
+        }
+
         var nome = $"{Guid.NewGuid():N}{extensao.ToLowerInvariant()}";
         Directory.CreateDirectory(_paths.FotosDirectory);
         File.Copy(caminhoOrigem, Path.Combine(_paths.FotosDirectory, nome));
         return nome;
+    }
+
+    private static bool TemCabecalhoDeImagem(string caminho)
+    {
+        Span<byte> cabecalho = stackalloc byte[8];
+        using var fluxo = File.OpenRead(caminho);
+        var lidos = fluxo.Read(cabecalho);
+        ReadOnlySpan<byte> lido = cabecalho[..lidos];
+        return lido.StartsWith(new byte[] { 0xFF, 0xD8, 0xFF })
+            || lido.StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A })
+            || lido.StartsWith(new byte[] { 0x42, 0x4D });
     }
 
     public void Excluir(string nomeArquivo)
