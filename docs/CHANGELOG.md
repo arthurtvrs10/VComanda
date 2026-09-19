@@ -1,5 +1,19 @@
 # Histórico de alterações
 
+## 1.12 - 2026-09-19 - Foto do produto
+
+- Produtos passam a ter uma foto opcional: "Escolher foto..." e "Remover
+  foto" no formulário da tela de Produtos (para um produto já salvo e
+  selecionado), com preview.
+- A foto aparece nos cards do menu da tela de Atendimento; produto sem
+  foto (ou com arquivo ausente/corrompido) continua mostrando o
+  placeholder cinza.
+- A imagem é copiada para `%LOCALAPPDATA%\VarthexComanda\fotos` (formatos
+  JPG/PNG/BMP, até 10 MB); o banco guarda só o nome do arquivo. Trocar ou
+  remover apaga o arquivo antigo.
+- Limitação conhecida: o backup ainda copia só o banco de dados — as fotos
+  não vão junto (fatia futura).
+
 ## 1.11 - 2026-09-18 - Redesign da tela de Atendimento
 
 - Grade de comandas passa a mostrar um número fixo de slots numerados
