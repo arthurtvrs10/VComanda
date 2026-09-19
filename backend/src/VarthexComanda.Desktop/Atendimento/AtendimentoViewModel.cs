@@ -143,10 +143,9 @@ public partial class AtendimentoViewModel : ObservableObject
     {
         if (slot.Aberta)
         {
-            var comanda = ComandasAbertas.FirstOrDefault(c => c.Numero == slot.Numero);
-            if (comanda is not null)
+            if (slot.ComandaId is int comandaId)
             {
-                AbrirParaEdicao(comanda.Id);
+                AbrirParaEdicao(comandaId);
             }
             return;
         }
@@ -373,6 +372,18 @@ public partial class AtendimentoViewModel : ObservableObject
                     TempoFormatado = string.Empty
                 });
             }
+        }
+
+        foreach (var comanda in ComandasAbertas.Where(c => c.Numero > tamanho))
+        {
+            Slots.Add(new ComandaSlotItem
+            {
+                Numero = comanda.Numero,
+                Aberta = true,
+                ComandaId = comanda.Id,
+                TotalFormatado = CentavosParaMoedaConverter.Formatar(comanda.TotalCentavos),
+                TempoFormatado = FormatarTempoAberta(comanda.AbertaEm, agora)
+            });
         }
     }
 

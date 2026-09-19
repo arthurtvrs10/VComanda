@@ -331,4 +331,88 @@ public class AtendimentoViewModelTests
         Assert.Equal("R$ 5,00", slot.TotalFormatado);
         Assert.Equal("há 5 min", slot.TempoFormatado);
     }
+
+    [Fact]
+    public void AtualizarSlots_ComandaAbertaComNumeroForaDoTamanhoConfigurado_ContinuaVisivelEAcessivel()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = true };
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
+        var configuracoes = new FakeConfiguracaoRepository();
+        configuracoes.Definir("comandas.quantidade_maxima", "5", DateTime.UtcNow);
+
+        var viewModel = new AtendimentoViewModel(
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
+            new AdicionarItem(comandas, new FakeProdutoRepository(), relogio),
+            new AlterarQuantidade(comandas, relogio),
+            new RemoverItem(comandas, relogio),
+            new CancelarComanda(comandas, relogio),
+            comandas,
+            new ListarCategoriasAtivas(categorias),
+            new PesquisarProdutos(new FakeProdutoRepository()),
+            confirmador,
+            encerramentoDialog,
+            new ObterConfiguracao(configuracoes),
+            relogio);
+
+        viewModel.NovoNumero = "30";
+        viewModel.AbrirCommand.Execute(null);
+
+        Assert.Equal(6, viewModel.Slots.Count);
+        var slotForaDaGrade = viewModel.Slots.Single(s => s.Numero == 30);
+        Assert.True(slotForaDaGrade.Aberta);
+        Assert.NotNull(slotForaDaGrade.ComandaId);
+
+        viewModel.AbrirOuSelecionarSlotCommand.Execute(slotForaDaGrade);
+
+        Assert.NotNull(viewModel.ComandaAtual);
+        Assert.Equal(30, viewModel.ComandaAtual!.Numero);
+    }
+
+    [Fact]
+    public void AtualizarSlots_ComandaAbertaAgoraMesmo_MostraTempoAgora()
+    {
+        var (viewModel, _, _, _) = CriarViewModel();
+
+        viewModel.NovoNumero = "7";
+        viewModel.AbrirCommand.Execute(null);
+
+        var slot = viewModel.Slots.Single(s => s.Numero == 7);
+        Assert.Equal("agora", slot.TempoFormatado);
+    }
+
+    [Fact]
+    public void AtualizarSlots_ComandaAbertaHaMaisDeUmaHora_MostraTempoEmHoras()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = true };
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
+
+        var viewModel = new AtendimentoViewModel(
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
+            new AdicionarItem(comandas, new FakeProdutoRepository(), relogio),
+            new AlterarQuantidade(comandas, relogio),
+            new RemoverItem(comandas, relogio),
+            new CancelarComanda(comandas, relogio),
+            comandas,
+            new ListarCategoriasAtivas(categorias),
+            new PesquisarProdutos(new FakeProdutoRepository()),
+            confirmador,
+            encerramentoDialog,
+            new ObterConfiguracao(new FakeConfiguracaoRepository()),
+            relogio);
+
+        viewModel.NovoNumero = "7";
+        viewModel.AbrirCommand.Execute(null);
+
+        relogio.UtcNow = relogio.UtcNow.AddMinutes(90);
+        viewModel.AtualizarComandasAbertas();
+
+        var slot = viewModel.Slots.Single(s => s.Numero == 7);
+        Assert.Equal("há 1 h", slot.TempoFormatado);
+    }
 }
