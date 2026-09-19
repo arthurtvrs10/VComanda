@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VarthexComanda.Application.Abstractions;
 using VarthexComanda.Application.Atendimento;
 using VarthexComanda.Application.Catalogo;
+using VarthexComanda.Application.Configuracao;
 using VarthexComanda.Domain;
 
 namespace VarthexComanda.Desktop.Atendimento;
@@ -19,6 +21,8 @@ public partial class AtendimentoViewModel : ObservableObject
     private readonly PesquisarProdutos _pesquisarProdutos;
     private readonly IConfirmador _confirmador;
     private readonly IEncerramentoDialog _encerramentoDialog;
+    private readonly ObterConfiguracao _obterConfiguracao;
+    private readonly IClock _relogio;
 
     public AtendimentoViewModel(
         AbrirComanda abrirComanda,
@@ -30,7 +34,9 @@ public partial class AtendimentoViewModel : ObservableObject
         ListarCategoriasAtivas listarCategoriasAtivas,
         PesquisarProdutos pesquisarProdutos,
         IConfirmador confirmador,
-        IEncerramentoDialog encerramentoDialog)
+        IEncerramentoDialog encerramentoDialog,
+        ObterConfiguracao obterConfiguracao,
+        IClock relogio)
     {
         _abrirComanda = abrirComanda;
         _adicionarItem = adicionarItem;
@@ -42,11 +48,14 @@ public partial class AtendimentoViewModel : ObservableObject
         _pesquisarProdutos = pesquisarProdutos;
         _confirmador = confirmador;
         _encerramentoDialog = encerramentoDialog;
+        _obterConfiguracao = obterConfiguracao;
+        _relogio = relogio;
 
         ComandasAbertas = new ObservableCollection<Comanda>();
         Categorias = new ObservableCollection<Categoria>();
         Itens = new ObservableCollection<ItemComanda>();
         ProdutosCatalogo = new ObservableCollection<Produto>();
+        Slots = new ObservableCollection<ComandaSlotItem>();
 
         AtualizarComandasAbertas();
         CarregarCategorias();
@@ -56,6 +65,7 @@ public partial class AtendimentoViewModel : ObservableObject
     public ObservableCollection<Categoria> Categorias { get; }
     public ObservableCollection<ItemComanda> Itens { get; }
     public ObservableCollection<Produto> ProdutosCatalogo { get; }
+    public ObservableCollection<ComandaSlotItem> Slots { get; }
 
     [ObservableProperty]
     private string novoNumero = string.Empty;
@@ -124,6 +134,23 @@ public partial class AtendimentoViewModel : ObservableObject
 
     [RelayCommand]
     private void SelecionarComanda(Comanda comanda) => AbrirParaEdicao(comanda.Id);
+
+    [RelayCommand]
+    private void AbrirOuSelecionarSlot(ComandaSlotItem slot)
+    {
+        if (slot.Aberta)
+        {
+            var comanda = ComandasAbertas.FirstOrDefault(c => c.Numero == slot.Numero);
+            if (comanda is not null)
+            {
+                AbrirParaEdicao(comanda.Id);
+            }
+            return;
+        }
+
+        NovoNumero = slot.Numero.ToString();
+        Abrir();
+    }
 
     private void AbrirParaEdicao(int comandaId)
     {
@@ -301,13 +328,63 @@ public partial class AtendimentoViewModel : ObservableObject
         VerTotalCommand.NotifyCanExecuteChanged();
     }
 
-    private void AtualizarComandasAbertas()
+    public void AtualizarComandasAbertas()
     {
         ComandasAbertas.Clear();
         foreach (var comanda in _comandas.ListarAbertas())
         {
             ComandasAbertas.Add(comanda);
         }
+        AtualizarSlots();
+    }
+
+    private void AtualizarSlots()
+    {
+        var configuracao = _obterConfiguracao.Executar();
+        var tamanho = configuracao.QuantidadeMaximaComandas ?? 20;
+        var agora = _relogio.UtcNow;
+
+        Slots.Clear();
+        for (var numero = 1; numero <= tamanho; numero++)
+        {
+            var comanda = ComandasAbertas.FirstOrDefault(c => c.Numero == numero);
+            if (comanda is not null)
+            {
+                Slots.Add(new ComandaSlotItem
+                {
+                    Numero = numero,
+                    Aberta = true,
+                    ComandaId = comanda.Id,
+                    TotalFormatado = CentavosParaMoedaConverter.Formatar(comanda.TotalCentavos),
+                    TempoFormatado = FormatarTempoAberta(comanda.AbertaEm, agora)
+                });
+            }
+            else
+            {
+                Slots.Add(new ComandaSlotItem
+                {
+                    Numero = numero,
+                    Aberta = false,
+                    ComandaId = null,
+                    TotalFormatado = string.Empty,
+                    TempoFormatado = string.Empty
+                });
+            }
+        }
+    }
+
+    private static string FormatarTempoAberta(DateTime abertaEmUtc, DateTime agoraUtc)
+    {
+        var decorrido = agoraUtc - abertaEmUtc;
+        if (decorrido.TotalMinutes < 1)
+        {
+            return "agora";
+        }
+        if (decorrido.TotalMinutes < 60)
+        {
+            return $"há {(int)decorrido.TotalMinutes} min";
+        }
+        return $"há {(int)decorrido.TotalHours} h";
     }
 
     public void AtualizarCategorias() => CarregarCategorias();

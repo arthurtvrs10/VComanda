@@ -32,7 +32,9 @@ public class AtendimentoViewModelTests
             new ListarCategoriasAtivas(categorias),
             new PesquisarProdutos(produtos),
             confirmador,
-            encerramentoDialog);
+            encerramentoDialog,
+            new ObterConfiguracao(new FakeConfiguracaoRepository()),
+            relogio);
 
         return (viewModel, produtos, confirmador, encerramentoDialog);
     }
@@ -199,5 +201,134 @@ public class AtendimentoViewModelTests
 
         Assert.NotNull(viewModel.ComandaAtual);
         Assert.Single(viewModel.ComandasAbertas);
+    }
+
+    [Fact]
+    public void AtualizarSlots_SemConfiguracao_Cria20SlotsComOsAbertosCorretos()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = true };
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
+
+        var viewModel = new AtendimentoViewModel(
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
+            new AdicionarItem(comandas, new FakeProdutoRepository(), relogio),
+            new AlterarQuantidade(comandas, relogio),
+            new RemoverItem(comandas, relogio),
+            new CancelarComanda(comandas, relogio),
+            comandas,
+            new ListarCategoriasAtivas(categorias),
+            new PesquisarProdutos(new FakeProdutoRepository()),
+            confirmador,
+            encerramentoDialog,
+            new ObterConfiguracao(new FakeConfiguracaoRepository()),
+            relogio);
+
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+
+        Assert.Equal(20, viewModel.Slots.Count);
+        var slotAberto = viewModel.Slots.Single(s => s.Numero == 10);
+        Assert.True(slotAberto.Aberta);
+        Assert.NotNull(slotAberto.ComandaId);
+        var slotLivre = viewModel.Slots.Single(s => s.Numero == 1);
+        Assert.False(slotLivre.Aberta);
+        Assert.Null(slotLivre.ComandaId);
+    }
+
+    [Fact]
+    public void AtualizarSlots_ComConfiguracao_UsaTamanhoConfigurado()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = true };
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
+        var configuracoes = new FakeConfiguracaoRepository();
+        configuracoes.Definir("comandas.quantidade_maxima", "5", DateTime.UtcNow);
+
+        var viewModel = new AtendimentoViewModel(
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
+            new AdicionarItem(comandas, new FakeProdutoRepository(), relogio),
+            new AlterarQuantidade(comandas, relogio),
+            new RemoverItem(comandas, relogio),
+            new CancelarComanda(comandas, relogio),
+            comandas,
+            new ListarCategoriasAtivas(categorias),
+            new PesquisarProdutos(new FakeProdutoRepository()),
+            confirmador,
+            encerramentoDialog,
+            new ObterConfiguracao(configuracoes),
+            relogio);
+
+        Assert.Equal(5, viewModel.Slots.Count);
+    }
+
+    [Fact]
+    public void AbrirOuSelecionarSlot_SlotLivre_AbreComandaNesseNumero()
+    {
+        var (viewModel, _, _, _) = CriarViewModel();
+
+        var slotLivre = viewModel.Slots.Single(s => s.Numero == 7);
+        viewModel.AbrirOuSelecionarSlotCommand.Execute(slotLivre);
+
+        Assert.NotNull(viewModel.ComandaAtual);
+        Assert.Equal(7, viewModel.ComandaAtual!.Numero);
+    }
+
+    [Fact]
+    public void AbrirOuSelecionarSlot_SlotAberto_EntraNaEdicao()
+    {
+        var (viewModel, _, _, _) = CriarViewModel();
+        viewModel.NovoNumero = "10";
+        viewModel.AbrirCommand.Execute(null);
+        viewModel.FecharEdicaoCommand.Execute(null);
+
+        var slotAberto = viewModel.Slots.Single(s => s.Numero == 10);
+        viewModel.AbrirOuSelecionarSlotCommand.Execute(slotAberto);
+
+        Assert.NotNull(viewModel.ComandaAtual);
+        Assert.Equal(10, viewModel.ComandaAtual!.Numero);
+    }
+
+    [Fact]
+    public void AtualizarSlots_ComandaAbertaMostraTotalETempoFormatados()
+    {
+        var categorias = new FakeCategoriaRepository();
+        var relogio = new FakeClock();
+        var categoria = new CadastrarCategoria(categorias, relogio).Executar("Bebidas").Valor!;
+        var produtos = new FakeProdutoRepository();
+        new CadastrarProduto(produtos, categorias, relogio).Executar("Refrigerante", categoria.Id, 500);
+        var comandas = new FakeComandaRepository();
+        var confirmador = new FakeConfirmador { ProximaResposta = true };
+        var encerramentoDialog = new FakeEncerramentoDialog(comandas, relogio);
+
+        var viewModel = new AtendimentoViewModel(
+            new AbrirComanda(comandas, relogio, new ObterConfiguracao(new FakeConfiguracaoRepository())),
+            new AdicionarItem(comandas, produtos, relogio),
+            new AlterarQuantidade(comandas, relogio),
+            new RemoverItem(comandas, relogio),
+            new CancelarComanda(comandas, relogio),
+            comandas,
+            new ListarCategoriasAtivas(categorias),
+            new PesquisarProdutos(produtos),
+            confirmador,
+            encerramentoDialog,
+            new ObterConfiguracao(new FakeConfiguracaoRepository()),
+            relogio);
+
+        viewModel.NovoNumero = "7";
+        viewModel.AbrirCommand.Execute(null);
+
+        relogio.UtcNow = relogio.UtcNow.AddMinutes(5);
+        var produto = produtos.Pesquisar(null, null)[0];
+        viewModel.AdicionarProdutoAoItemCommand.Execute(produto);
+
+        var slot = viewModel.Slots.Single(s => s.Numero == 7);
+        Assert.True(slot.Aberta);
+        Assert.Equal("R$ 5,00", slot.TotalFormatado);
+        Assert.Equal("há 5 min", slot.TempoFormatado);
     }
 }
