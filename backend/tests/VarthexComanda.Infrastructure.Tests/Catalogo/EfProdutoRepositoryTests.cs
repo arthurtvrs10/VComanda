@@ -89,4 +89,67 @@ public class EfProdutoRepositoryTests : IDisposable
         Assert.Equal(600, carregado!.PrecoCentavos);
         Assert.Single(repositorio.Pesquisar(null, null));
     }
+
+    [Fact]
+    public void Salvar_ProdutoComFoto_PersisteNomeDoArquivo()
+    {
+        var repositorio = new EfProdutoRepository(_fabrica);
+
+        var salvo = repositorio.Salvar(new Produto
+        {
+            Id = 0,
+            CategoriaId = _categoriaId,
+            Nome = "X-Burguer",
+            PrecoCentavos = 1800,
+            Ativo = true,
+            CriadoEm = DateTime.UtcNow,
+            AtualizadoEm = DateTime.UtcNow,
+            FotoArquivo = "abc123.jpg"
+        });
+
+        var lido = repositorio.BuscarPorId(salvo.Id);
+        Assert.Equal("abc123.jpg", lido!.FotoArquivo);
+    }
+
+    [Fact]
+    public void Salvar_ProdutoSemFoto_FotoArquivoFicaNula()
+    {
+        var repositorio = new EfProdutoRepository(_fabrica);
+
+        var salvo = repositorio.Salvar(new Produto
+        {
+            Id = 0,
+            CategoriaId = _categoriaId,
+            Nome = "Coca-Cola",
+            PrecoCentavos = 500,
+            Ativo = true,
+            CriadoEm = DateTime.UtcNow,
+            AtualizadoEm = DateTime.UtcNow
+        });
+
+        Assert.Null(repositorio.BuscarPorId(salvo.Id)!.FotoArquivo);
+    }
+
+    [Fact]
+    public void Salvar_LimparFotoDeProdutoExistente_PersisteNulo()
+    {
+        var repositorio = new EfProdutoRepository(_fabrica);
+        var salvo = repositorio.Salvar(new Produto
+        {
+            Id = 0,
+            CategoriaId = _categoriaId,
+            Nome = "Suco",
+            PrecoCentavos = 800,
+            Ativo = true,
+            CriadoEm = DateTime.UtcNow,
+            AtualizadoEm = DateTime.UtcNow,
+            FotoArquivo = "velha.png"
+        });
+
+        var carregado = repositorio.BuscarPorId(salvo.Id)!;
+        carregado.FotoArquivo = null;
+        repositorio.Salvar(carregado);
+
+        Assert.Null(repositorio.BuscarPorId(salvo.Id)!.FotoArquivo);
+    }
 }

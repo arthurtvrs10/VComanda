@@ -10,6 +10,7 @@ public class AppPaths
         DataDirectory = Path.Combine(Root, "data");
         LogsDirectory = Path.Combine(Root, "logs");
         BackupsDirectory = Path.Combine(Root, "backups");
+        FotosDirectory = Path.Combine(Root, "fotos");
         DatabasePath = Path.Combine(DataDirectory, "varthex-comanda.db");
     }
 
@@ -17,6 +18,7 @@ public class AppPaths
     public string DataDirectory { get; }
     public string LogsDirectory { get; }
     public string BackupsDirectory { get; }
+    public string FotosDirectory { get; }
     public string DatabasePath { get; }
 
     public void EnsureCreated()
@@ -24,5 +26,6 @@ public class AppPaths
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(LogsDirectory);
         Directory.CreateDirectory(BackupsDirectory);
+        Directory.CreateDirectory(FotosDirectory);
     }
 }

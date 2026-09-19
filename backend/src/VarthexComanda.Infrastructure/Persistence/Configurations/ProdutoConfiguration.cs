@@ -21,6 +21,7 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         builder.Property(p => p.Ativo).HasColumnName("ativo").HasConversion<int>().IsRequired();
         builder.Property(p => p.CriadoEm).HasColumnName("criado_em").IsRequired();
         builder.Property(p => p.AtualizadoEm).HasColumnName("atualizado_em").IsRequired();
+        builder.Property(p => p.FotoArquivo).HasColumnName("foto_arquivo");
 
         builder.HasOne<Categoria>()
             .WithMany()

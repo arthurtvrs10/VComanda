@@ -9,4 +9,5 @@ public class Produto
     public required bool Ativo { get; set; }
     public required DateTime CriadoEm { get; set; }
     public required DateTime AtualizadoEm { get; set; }
+    public string? FotoArquivo { get; set; }
 }

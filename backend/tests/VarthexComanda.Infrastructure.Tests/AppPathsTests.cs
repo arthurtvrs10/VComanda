@@ -25,4 +25,24 @@ public class AppPathsTests
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
         }
     }
+
+    [Fact]
+    public void FotosDirectory_FicaSobARaiz_ECriadoPorEnsureCreated()
+    {
+        var raiz = Path.Combine(Path.GetTempPath(), $"varthex-apppaths-{Guid.NewGuid()}");
+        try
+        {
+            var paths = new AppPaths(raiz);
+
+            Assert.Equal(Path.Combine(raiz, "fotos"), paths.FotosDirectory);
+
+            paths.EnsureCreated();
+
+            Assert.True(Directory.Exists(paths.FotosDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(raiz)) Directory.Delete(raiz, true);
+        }
+    }
 }
