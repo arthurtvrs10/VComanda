@@ -49,6 +49,7 @@ public partial class App : System.Windows.Application
 
         var paths = new AppPaths();
         paths.EnsureCreated();
+        VarthexComanda.Desktop.Catalogo.FotoArquivoParaImagemConverter.DiretorioFotos = paths.FotosDirectory;
 
         _logger = LoggingConfigurator.CreateLogger(paths.LogsDirectory);
         _logger.Information("Iniciando Varthex Comanda");

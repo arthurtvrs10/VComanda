@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:VarthexComanda.Desktop.Atendimento"
+             xmlns:catalogo="clr-namespace:VarthexComanda.Desktop.Catalogo"
              mc:Ignorable="d"
              Background="#F2F2F0">
     <UserControl.Resources>
@@ -11,6 +12,7 @@
         <local:NuloParaVisibilidadeInversoConverter x:Key="VisivelSeGrade" />
         <local:CentavosParaMoedaConverter x:Key="Moeda" />
         <local:CategoriaSelecionadaParaCorConverter x:Key="CorCategoria" />
+        <catalogo:FotoArquivoParaImagemConverter x:Key="FotoImagem" />
     </UserControl.Resources>
     <UserControl.InputBindings>
         <KeyBinding Key="F4" Command="{Binding VerTotalCommand}" />
@@ -124,7 +126,9 @@
                                             <RowDefinition Height="*" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Border Grid.Row="0" Background="#EDEDEA" />
+                                        <Grid Grid.Row="0" Background="#EDEDEA" ClipToBounds="True">
+                                            <Image Source="{Binding FotoArquivo, Converter={StaticResource FotoImagem}}" Stretch="UniformToFill" />
+                                        </Grid>
                                         <Border Grid.Row="1" BorderBrush="#C4C4C4" BorderThickness="0,1,0,0" Padding="8,6">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Nome}" FontSize="12" FontWeight="SemiBold"

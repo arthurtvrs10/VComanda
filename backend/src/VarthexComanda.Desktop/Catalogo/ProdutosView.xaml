@@ -3,7 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:VarthexComanda.Desktop.Catalogo"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:FotoArquivoParaImagemConverter x:Key="FotoImagem" />
+    </UserControl.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -48,6 +52,28 @@
             <TextBox Text="{Binding PrecoProdutoReais, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
 
             <CheckBox Content="Ativo" IsChecked="{Binding ProdutoAtivo}" Margin="0,0,0,8" />
+
+            <TextBlock Text="Foto" Margin="0,8,0,2" />
+            <Grid Width="120" Height="120" HorizontalAlignment="Left" Background="#EDEDEA" ClipToBounds="True">
+                <Image Source="{Binding FotoArquivoAtual, Converter={StaticResource FotoImagem}}" Stretch="UniformToFill" />
+            </Grid>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Button Content="Escolher foto..." Click="EscolherFoto_Click"
+                        IsEnabled="{Binding TemProdutoSelecionado}" Margin="0,0,8,0" Padding="8,2" />
+                <Button Content="Remover foto" Command="{Binding RemoverFotoCommand}" Padding="8,2" />
+            </StackPanel>
+            <TextBlock Text="Salve o produto e selecione-o na lista para adicionar uma foto."
+                       FontSize="11" Foreground="#6B6B67" TextWrapping="Wrap" Margin="0,4,0,8">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding TemProdutoSelecionado}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
 
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                 <Button Content="Novo" Command="{Binding NovoCommand}" Margin="0,0,8,0" />
